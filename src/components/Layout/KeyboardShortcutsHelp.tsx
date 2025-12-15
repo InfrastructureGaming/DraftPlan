@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUIStore } from '@/stores/uiStore';
 
 interface ShortcutSection {
   title: string;
@@ -24,6 +25,10 @@ const SHORTCUTS: ShortcutSection[] = [
       { keys: `${modKey}+Z`, description: 'Undo' },
       { keys: `${modKey}+Shift+Z`, description: 'Redo' },
       { keys: `${modKey}+Y`, description: 'Redo (alternative)' },
+      { keys: `${modKey}+C`, description: 'Copy selected objects' },
+      { keys: `${modKey}+V`, description: 'Paste objects' },
+      { keys: `${modKey}+D`, description: 'Duplicate selected objects' },
+      { keys: `${modKey}+A`, description: 'Select all objects' },
       { keys: 'Delete', description: 'Delete selected objects' },
       { keys: 'Backspace', description: 'Delete selected objects' },
       { keys: 'Esc', description: 'Clear selection' },
@@ -50,6 +55,13 @@ const SHORTCUTS: ShortcutSection[] = [
     ],
   },
   {
+    title: 'Object Movement',
+    shortcuts: [
+      { keys: 'Arrow Keys', description: 'Move selected objects 1"' },
+      { keys: 'Shift+Arrow', description: 'Move selected objects 1/8"' },
+    ],
+  },
+  {
     title: 'Help',
     shortcuts: [
       { keys: '?', description: 'Show this help' },
@@ -59,6 +71,19 @@ const SHORTCUTS: ShortcutSection[] = [
 
 export function KeyboardShortcutsHelp() {
   const [isOpen, setIsOpen] = useState(false);
+  const { theme } = useUIStore();
+
+  // Theme-based colors
+  const colors = {
+    bg: theme === 'dark' ? 'bg-[#2a2a2a]' : theme === 'blueprint' ? 'bg-[#1E3A8A]' : 'bg-white',
+    text: theme === 'dark' ? 'text-white' : theme === 'blueprint' ? 'text-white' : 'text-gray-800',
+    textMuted: theme === 'dark' ? 'text-gray-400' : theme === 'blueprint' ? 'text-blue-200' : 'text-gray-600',
+    textSubdued: theme === 'dark' ? 'text-gray-500' : theme === 'blueprint' ? 'text-blue-300' : 'text-gray-500',
+    border: theme === 'dark' ? 'border-[#333333]' : theme === 'blueprint' ? 'border-[#2E4A9A]' : 'border-gray-200',
+    headerBg: theme === 'dark' ? 'bg-[#1a1a1a]' : theme === 'blueprint' ? 'bg-[#0A2463]' : 'bg-gray-50',
+    kbdBg: theme === 'dark' ? 'bg-[#1a1a1a]' : theme === 'blueprint' ? 'bg-[#0A2463]' : 'bg-gray-100',
+    kbdBorder: theme === 'dark' ? 'border-[#333333]' : theme === 'blueprint' ? 'border-blue-800' : 'border-gray-300',
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,16 +122,16 @@ export function KeyboardShortcutsHelp() {
       onClick={() => setIsOpen(false)}
     >
       <div
-        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        className={`${colors.bg} rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className={`p-6 border-b ${colors.border}`}>
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-gray-800">Keyboard Shortcuts</h2>
+            <h2 className={`text-2xl font-semibold ${colors.text}`}>Keyboard Shortcuts</h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              className={`${colors.textMuted} hover:${colors.text} text-2xl leading-none transition-colors`}
             >
               ×
             </button>
@@ -118,12 +143,12 @@ export function KeyboardShortcutsHelp() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {SHORTCUTS.map((section) => (
               <div key={section.title}>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">{section.title}</h3>
+                <h3 className={`text-sm font-semibold ${colors.text} mb-3`}>{section.title}</h3>
                 <div className="space-y-2">
                   {section.shortcuts.map((shortcut, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">{shortcut.description}</span>
-                      <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded">
+                    <div key={index} className="flex items-center justify-between gap-4">
+                      <span className={`text-sm ${colors.textMuted}`}>{shortcut.description}</span>
+                      <kbd className={`px-2 py-1 text-xs font-mono ${colors.kbdBg} border ${colors.kbdBorder} rounded ${colors.text} whitespace-nowrap flex-shrink-0`}>
                         {shortcut.keys}
                       </kbd>
                     </div>
@@ -135,10 +160,10 @@ export function KeyboardShortcutsHelp() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-50 border-t border-gray-200 text-center">
-          <p className="text-xs text-gray-500">
-            Press <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded">?</kbd> or{' '}
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded">Esc</kbd> to close
+        <div className={`p-4 ${colors.headerBg} border-t ${colors.border} text-center`}>
+          <p className={`text-xs ${colors.textSubdued}`}>
+            Press <kbd className={`px-1.5 py-0.5 text-xs font-mono ${colors.kbdBg} border ${colors.kbdBorder} rounded ${colors.text}`}>?</kbd> or{' '}
+            <kbd className={`px-1.5 py-0.5 text-xs font-mono ${colors.kbdBg} border ${colors.kbdBorder} rounded ${colors.text}`}>Esc</kbd> to close
           </p>
         </div>
       </div>
