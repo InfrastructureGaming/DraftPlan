@@ -7,6 +7,7 @@ import { screenToWorld, snapVectorToGrid, screenDeltaToWorldDelta } from '@/lib/
 import { ViewType, DraftObject, LumberLibraryItem } from '@/types';
 import { CanvasControls } from './CanvasControls';
 import { Rulers } from './Rulers';
+import { DimensionOverlay } from './DimensionOverlay';
 
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1125,6 +1126,17 @@ export function Canvas() {
 
       {/* Rulers */}
       <Rulers canvasWidth={canvasDimensions.width} canvasHeight={canvasDimensions.height} />
+
+      {/* Dimension Text Overlay */}
+      {cameraRef.current && canvasDimensions.width > 0 && (
+        <DimensionOverlay
+          objects={objects}
+          camera={cameraRef.current}
+          currentView={camera.currentView}
+          canvasWidth={canvasDimensions.width}
+          canvasHeight={canvasDimensions.height}
+        />
+      )}
 
       {/* Canvas Controls */}
       {controlsPanelOpen && (
