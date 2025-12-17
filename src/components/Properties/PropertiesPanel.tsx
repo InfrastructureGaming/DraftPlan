@@ -47,6 +47,10 @@ export function PropertiesPanel() {
     updateObject(selectedObject.id, { notes: e.target.value });
   };
 
+  const handleRotationToggle = () => {
+    updateObject(selectedObject.id, { rotationEnabled: !selectedObject.rotationEnabled });
+  };
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
@@ -106,7 +110,18 @@ export function PropertiesPanel() {
 
         {/* Rotation */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Rotation (degrees)</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-xs font-medium text-gray-700">Rotation (degrees)</label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedObject.rotationEnabled}
+                onChange={handleRotationToggle}
+                className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-600">Enable</span>
+            </label>
+          </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs text-gray-500 mb-1">X</label>
@@ -114,8 +129,11 @@ export function PropertiesPanel() {
                 type="number"
                 value={selectedObject.rotation.x}
                 onChange={(e) => handleRotationChange('x', e.target.value)}
+                disabled={!selectedObject.rotationEnabled}
                 step="15"
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  !selectedObject.rotationEnabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                }`}
               />
             </div>
             <div>
@@ -124,8 +142,11 @@ export function PropertiesPanel() {
                 type="number"
                 value={selectedObject.rotation.y}
                 onChange={(e) => handleRotationChange('y', e.target.value)}
+                disabled={!selectedObject.rotationEnabled}
                 step="15"
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  !selectedObject.rotationEnabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                }`}
               />
             </div>
             <div>
@@ -134,8 +155,11 @@ export function PropertiesPanel() {
                 type="number"
                 value={selectedObject.rotation.z}
                 onChange={(e) => handleRotationChange('z', e.target.value)}
+                disabled={!selectedObject.rotationEnabled}
                 step="15"
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  !selectedObject.rotationEnabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                }`}
               />
             </div>
           </div>

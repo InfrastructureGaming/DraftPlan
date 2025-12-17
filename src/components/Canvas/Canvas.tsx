@@ -497,6 +497,7 @@ export function Canvas() {
         tags: libraryItem.tags,
         gridSnap: true,
         showDimensions: true,
+        rotationEnabled: false,
         notes: '',
       };
 

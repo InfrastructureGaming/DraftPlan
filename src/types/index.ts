@@ -26,6 +26,7 @@ export interface DraftObject {
   tags: string[];
   gridSnap: boolean;
   showDimensions: boolean;
+  rotationEnabled: boolean;
   notes: string;
   assemblyId?: string;
 }
