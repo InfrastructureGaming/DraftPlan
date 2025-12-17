@@ -51,6 +51,15 @@ export function PropertiesPanel() {
     updateObject(selectedObject.id, { rotationEnabled: !selectedObject.rotationEnabled });
   };
 
+  const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      updateObject(selectedObject.id, {
+        dimensions: { ...selectedObject.dimensions, [dimension]: numValue },
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
@@ -165,35 +174,41 @@ export function PropertiesPanel() {
           </div>
         </div>
 
-        {/* Dimensions (Read-only) */}
+        {/* Dimensions */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Dimensions (inches)</label>
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Width</label>
               <input
-                type="text"
+                type="number"
                 value={selectedObject.dimensions.width}
-                readOnly
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-600"
+                onChange={(e) => handleDimensionChange('width', e.target.value)}
+                step="0.0625"
+                min="0.0625"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Height</label>
               <input
-                type="text"
+                type="number"
                 value={selectedObject.dimensions.height}
-                readOnly
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-600"
+                onChange={(e) => handleDimensionChange('height', e.target.value)}
+                step="0.0625"
+                min="0.0625"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Length</label>
               <input
-                type="text"
+                type="number"
                 value={selectedObject.dimensions.depth}
-                readOnly
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-600"
+                onChange={(e) => handleDimensionChange('depth', e.target.value)}
+                step="0.0625"
+                min="0.0625"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>

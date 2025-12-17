@@ -18,7 +18,7 @@ export function Canvas() {
   const objectMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
   const { camera, objects, addObject, updateObject, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
-  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen } = useUIStore();
+  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -327,8 +327,8 @@ export function Canvas() {
         if (arrowKeys.includes(e.key)) {
           e.preventDefault();
 
-          // Movement step size: 1 inch normally, 0.125 inch (1/8") with Shift for fine control
-          const stepSize = e.shiftKey ? 0.125 : 1;
+          // Movement step size: from snapIncrement dropdown, 1/8 of that with Shift for fine control
+          const stepSize = e.shiftKey ? snapIncrement / 8 : snapIncrement;
 
           // Push to history before first move
           pushToHistory();
@@ -392,9 +392,9 @@ export function Canvas() {
               z: obj.position.z + deltaZ,
             };
 
-            // Snap to grid if enabled
-            if (obj.gridSnap) {
-              newPos = snapVectorToGrid(newPos, 1);
+            // Snap to grid if enabled (skip snapping with Shift for fine control)
+            if (obj.gridSnap && !e.shiftKey) {
+              newPos = snapVectorToGrid(newPos, snapIncrement);
             }
 
             updateObject(id, { position: newPos });
@@ -481,8 +481,8 @@ export function Canvas() {
         rect.height
       );
 
-      // Snap to grid
-      worldPos = snapVectorToGrid(worldPos, 1);
+      // Snap to grid using current snap increment
+      worldPos = snapVectorToGrid(worldPos, snapIncrement);
 
       // Create new object from library item
       const newObject: DraftObject = {
@@ -891,9 +891,9 @@ export function Canvas() {
           z: initialPos.z + worldDelta.z,
         };
 
-        // Snap to grid if enabled
+        // Snap to grid if enabled (using current snap increment)
         if (obj.gridSnap) {
-          newPos = snapVectorToGrid(newPos, 1);
+          newPos = snapVectorToGrid(newPos, snapIncrement);
         }
 
         updateObject(id, { position: newPos }, true); // skipHistory = true

@@ -21,6 +21,15 @@ const GRID_SIZES = [
   { value: 16, label: '16"' },
 ];
 
+// Available snap increments for arrow key movement (in inches)
+const SNAP_INCREMENTS = [
+  { value: 0.0625, label: '1/16"' },
+  { value: 0.125, label: '1/8"' },
+  { value: 0.25, label: '1/4"' },
+  { value: 0.5, label: '1/2"' },
+  { value: 1, label: '1"' },
+];
+
 export function CanvasControls({
   onZoomIn,
   onZoomOut,
@@ -30,7 +39,7 @@ export function CanvasControls({
   onPanEnd,
   gridSize,
 }: CanvasControlsProps) {
-  const { majorGridSize, setMajorGridSize, theme } = useUIStore();
+  const { majorGridSize, setMajorGridSize, snapIncrement, setSnapIncrement, theme } = useUIStore();
   const [isPanActive, setIsPanActive] = useState(false);
 
   // Theme-based colors
@@ -131,6 +140,24 @@ export function CanvasControls({
           {GRID_SIZES.map((size) => (
             <option key={size.value} value={size.value}>
               {size.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Snap increment controls */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className={`text-xs font-medium ${colors.text}`}>Snap Increment:</span>
+        </div>
+        <select
+          value={snapIncrement}
+          onChange={(e) => setSnapIncrement(Number(e.target.value))}
+          className={`w-full px-2 py-1 text-xs border ${colors.buttonBorder} ${colors.buttonBg} ${colors.text} rounded focus:outline-none focus:ring-1 focus:ring-blue-500`}
+        >
+          {SNAP_INCREMENTS.map((increment) => (
+            <option key={increment.value} value={increment.value}>
+              {increment.label}
             </option>
           ))}
         </select>

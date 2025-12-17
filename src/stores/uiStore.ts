@@ -8,6 +8,7 @@ interface UIState extends ProjectSettings {
   controlsPanelOpen: boolean;
   majorGridSize: number; // Size in inches for major grid lines
   minorGridVisible: boolean; // Toggle for 1/16" grid visibility
+  snapIncrement: number; // Snap increment in inches for arrow key movement
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'blueprint') => void;
@@ -18,6 +19,7 @@ interface UIState extends ProjectSettings {
   toggleControlsPanel: () => void;
   setMajorGridSize: (size: number) => void;
   toggleMinorGrid: () => void;
+  setSnapIncrement: (increment: number) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -29,6 +31,7 @@ export const useUIStore = create<UIState>((set) => ({
   controlsPanelOpen: true, // Default to visible
   majorGridSize: 1, // Default to 1 inch
   minorGridVisible: true, // Default to visible
+  snapIncrement: 1, // Default to 1 inch
 
   setTheme: (theme) => set({ theme }),
   toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),
@@ -41,4 +44,5 @@ export const useUIStore = create<UIState>((set) => ({
     set((state) => ({ controlsPanelOpen: !state.controlsPanelOpen })),
   setMajorGridSize: (size) => set({ majorGridSize: size }),
   toggleMinorGrid: () => set((state) => ({ minorGridVisible: !state.minorGridVisible })),
+  setSnapIncrement: (increment) => set({ snapIncrement: increment }),
 }));
