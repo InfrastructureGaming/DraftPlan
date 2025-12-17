@@ -51,6 +51,10 @@ export function PropertiesPanel() {
     updateObject(selectedObject.id, { rotationEnabled: !selectedObject.rotationEnabled });
   };
 
+  const handleShowDimensionsToggle = () => {
+    updateObject(selectedObject.id, { showDimensions: !selectedObject.showDimensions });
+  };
+
   const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: string) => {
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue > 0) {
@@ -234,6 +238,20 @@ export function PropertiesPanel() {
             readOnly
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-600"
           />
+        </div>
+
+        {/* Display Options */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-2">Display Options</label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selectedObject.showDimensions}
+              onChange={handleShowDimensionsToggle}
+              className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+            />
+            <span className="text-xs text-gray-700">Show dimensions on canvas</span>
+          </label>
         </div>
 
         {/* Notes */}

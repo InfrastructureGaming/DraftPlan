@@ -116,6 +116,25 @@ export function FileMenu() {
     }
   };
 
+  const handleQuit = async () => {
+    if (hasUnsavedChanges) {
+      const confirmed = confirm('You have unsaved changes. Quit anyway?');
+      if (!confirmed) return;
+    }
+
+    if (!window.electronAPI || !window.electronAPI.quit) {
+      alert('Electron API not available. Make sure you are running in Electron.');
+      console.error('window.electronAPI.quit is undefined');
+      return;
+    }
+
+    try {
+      await window.electronAPI.quit();
+    } catch (error) {
+      console.error('Error quitting app:', error);
+    }
+  };
+
   // Register file handlers for keyboard shortcuts
   useEffect(() => {
     registerFileHandlers({
@@ -155,6 +174,14 @@ export function FileMenu() {
         title="Save As... (Cmd/Ctrl+Shift+S)"
       >
         Save As...
+      </button>
+      <div className="border-l border-gray-300 h-6 mx-1" />
+      <button
+        onClick={handleQuit}
+        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+        title="Quit DraftPlan (Cmd/Ctrl+Q)"
+      >
+        Quit
       </button>
       {currentFilePath && (
         <span className="text-xs text-gray-500 ml-2">

@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('fs:writeFile', filePath, data),
   readFile: (filePath: string) =>
     ipcRenderer.invoke('fs:readFile', filePath),
+
+  // App operations
+  quit: () =>
+    ipcRenderer.invoke('app:quit'),
 });
 
 console.log('[PRELOAD] electronAPI exposed to window:', window.electronAPI);

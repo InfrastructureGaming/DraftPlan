@@ -74,6 +74,10 @@ ipcMain.handle('fs:readFile', async (_event, filePath: string) => {
   }
 });
 
+ipcMain.handle('app:quit', () => {
+  app.quit();
+});
+
 app.whenReady().then(() => {
   createWindow();
 

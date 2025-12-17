@@ -153,6 +153,26 @@ export function AppMenu() {
     }
   };
 
+  const handleQuit = async () => {
+    setIsOpen(false);
+    if (hasUnsavedChanges) {
+      const confirmed = confirm('You have unsaved changes. Quit anyway?');
+      if (!confirmed) return;
+    }
+
+    if (!window.electronAPI || !window.electronAPI.quit) {
+      alert('Electron API not available. Make sure you are running in Electron.');
+      console.error('window.electronAPI.quit is undefined');
+      return;
+    }
+
+    try {
+      await window.electronAPI.quit();
+    } catch (error) {
+      console.error('Error quitting app:', error);
+    }
+  };
+
   // Theme-based colors
   const colors = {
     text: theme === 'dark' ? 'text-white' : theme === 'blueprint' ? 'text-white' : 'text-gray-800',
@@ -210,6 +230,16 @@ export function AppMenu() {
           >
             Save As...
             <span className="float-right text-xs opacity-60">⇧⌘S</span>
+          </button>
+
+          <div className={`border-t ${colors.border} my-1`} />
+
+          <button
+            onClick={handleQuit}
+            className={`w-full text-left px-4 py-2 text-sm ${colors.menuText} ${colors.hover} transition-colors`}
+          >
+            Quit
+            <span className="float-right text-xs opacity-60">⌘Q</span>
           </button>
         </div>
       )}
