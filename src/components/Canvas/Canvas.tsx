@@ -779,7 +779,7 @@ export function Canvas() {
 
   // Control handlers
   // Fixed zoom levels for discrete, incremental zoom control
-  const ZOOM_LEVELS = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 16.0];
+  const ZOOM_LEVELS = [0.25, 0.33, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 16.0];
 
   const handleZoomIn = () => {
     // Find the next higher zoom level

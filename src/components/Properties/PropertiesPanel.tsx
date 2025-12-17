@@ -164,7 +164,7 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Depth</label>
+              <label className="block text-xs text-gray-500 mb-1">Length</label>
               <input
                 type="text"
                 value={selectedObject.dimensions.depth}

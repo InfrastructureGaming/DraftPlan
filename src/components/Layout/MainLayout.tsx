@@ -15,9 +15,9 @@ export function MainLayout() {
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Theme-based colors (matching canvas/ruler colors)
+  // Theme-based colors with better contrast between UI and canvas
   const colors = {
-    bg: theme === 'dark' ? 'bg-[#1a1a1a]' : theme === 'blueprint' ? 'bg-[#0A2463]' : 'bg-gray-100',
+    bg: theme === 'dark' ? 'bg-[#1a1a1a]' : theme === 'blueprint' ? 'bg-[#051938]' : 'bg-gray-200',
     panelBg: theme === 'dark' ? 'bg-[#2a2a2a]' : theme === 'blueprint' ? 'bg-[#1E3A8A]' : 'bg-white',
     toolbarBg: theme === 'dark' ? 'bg-[#2a2a2a]' : theme === 'blueprint' ? 'bg-[#1E3A8A]' : 'bg-white',
     border: theme === 'dark' ? 'border-[#333333]' : theme === 'blueprint' ? 'border-[#1E3A8A]' : 'border-gray-300',
