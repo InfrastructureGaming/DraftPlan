@@ -4,6 +4,7 @@
 **Date:** December 12, 2024  
 **Status:** Ready for Development
 
+
 ---
 
 ## Executive Summary
@@ -11,12 +12,14 @@
 **DraftPlan** is a specialized parametric orthographic CAD application designed specifically for woodworking project planning. Unlike heavyweight 3D modeling software (SketchUp, Fusion 360), DraftPlan provides a streamlined, purpose-built toolset for creating accurate, to-scale plans for furniture, cabinetry, and construction projects.
 
 ### Core Value Proposition
+
 - **Fast & Focused:** Stripped-down interface eliminates unnecessary complexity
 - **Blueprint Accuracy:** Generate orthographic views with precise dimensions
 - **Practical Output:** Export print-ready plans, materials lists, and cut sheets
 - **Cross-Platform:** Works on Windows and macOS
 
 ### Target User
+
 Home woodworkers, contractors, and DIY builders who need accurate plans without the learning curve of professional CAD software.
 
 ---
@@ -24,6 +27,7 @@ Home woodworkers, contractors, and DIY builders who need accurate plans without 
 ## Technical Architecture
 
 ### Technology Stack
+
 - **Framework:** Electron (cross-platform desktop)
 - **UI Layer:** React + Tailwind CSS
 - **3D Engine:** Three.js in orthographic mode
@@ -35,13 +39,16 @@ Home woodworkers, contractors, and DIY builders who need accurate plans without 
 - **File Format:** `.draftplan` (JSON structure)
 
 ### Coordinate System
+
 - **Y-up coordinate system** (matches Unreal Engine convention)
 - **Origin point:** Bottom-left corner of Front view (0, 0, 0)
 - **Units:** Imperial (inches) with future metric support
 - **Precision:** 1/16" minimum increment
 
 ### View System
+
 Six orthographic views with axis mapping:
+
 - **Front:** X→screen-X, Y→screen-Y, Z→depth
 - **Back:** X→screen-X (flipped), Y→screen-Y, Z→depth (reversed)
 - **Left:** Z→screen-X, Y→screen-Y, X→depth
@@ -50,6 +57,7 @@ Six orthographic views with axis mapping:
 - **Bottom:** X→screen-X, Z→screen-Y (flipped), Y→depth (reversed)
 
 ### Rendering Pipeline
+
 1. Maintain all objects in 3D space with full coordinate data
 2. For current view, project objects onto 2D plane
 3. Sort objects by depth (painter's algorithm - back to front)
@@ -61,6 +69,7 @@ Six orthographic views with axis mapping:
 ## Core Data Structures
 
 ### Project File (.draftplan)
+
 ```json
 {
   "version": "1.0",
@@ -141,6 +150,7 @@ Six orthographic views with axis mapping:
 ```
 
 ### Lumber Library Item
+
 ```json
 {
   "id": "lib-2x4-96",
@@ -160,7 +170,9 @@ Six orthographic views with axis mapping:
 ### Phase 1: Core 3D Foundation
 
 #### 1.1 Canvas & Grid System
+
 **Requirements:**
+
 - Canvas maintains 11:8.5 aspect ratio (landscape letter paper)
 - Zoom-adaptive grid displays appropriate divisions based on zoom level:
   - Far out: 12" divisions
@@ -172,24 +184,29 @@ Six orthographic views with axis mapping:
 - Background changes with theme (light/dark/blueprint modes)
 
 **Zoom Functionality:**
+
 - Range: 10% to 400%
 - Mouse wheel zoom centered on cursor position
 - Zoom controls: scroll wheel, +/- buttons, or Ctrl+scroll
 - Pan with spacebar+drag or middle mouse button
 
 **Canvas Background Colors:**
+
 - **Light Mode:** Warm-tinted white (#F8F6F0) with light gray grid (#D0D0D0)
 - **Dark Mode:** Dark gray (#2A2A2A) with medium gray grid (#505050)
 - **Blueprint Mode:** Blueprint blue (#0A2463) with lighter blue grid (#1E3A8A)
 
 #### 1.2 Object Placement & Manipulation
+
 **Drag-and-Drop from Library:**
+
 - Library panel on left side (collapsible)
 - Drag lumber item onto canvas to create instance
 - Object appears at cursor position, snaps to grid if enabled
 - Object automatically selects after placement
 
 **Movement Controls:**
+
 - Click to select object (highlight with selection color)
 - Drag selected object to reposition
 - Movement constrained to current view's planar axes:
@@ -201,6 +218,7 @@ Six orthographic views with axis mapping:
 - Arrow keys for precise 1-grid-unit movement
 
 **Selection:**
+
 - Click object to select
 - Ctrl/Cmd+click to multi-select
 - Click-drag empty canvas to box-select multiple objects
@@ -208,13 +226,16 @@ Six orthographic views with axis mapping:
 - Delete key removes selected object(s)
 
 #### 1.3 View Switching
+
 **View Controls:**
+
 - Dropdown menu or button group to switch views: Front, Back, Left, Right, Top, Bottom
 - Keyboard shortcuts: 1=Front, 2=Back, 3=Left, 4=Right, 5=Top, 6=Bottom
 - View name displayed prominently in UI
 - Canvas maintains zoom and pan relative to origin when switching views
 
 **3D Object Rendering:**
+
 - Objects rendered as 2D projections in current view
 - Depth sorting: objects further from camera render first (painter's algorithm)
 - Partially obscured objects rendered correctly (MVP: simple occlusion by depth)
@@ -224,9 +245,11 @@ Six orthographic views with axis mapping:
   - **Blueprint Mode:** White/light lines on blue background, handwritten-style font
 
 #### 1.4 Properties Panel
+
 **Location:** Docked to right side, collapsible
 
 **Content (when object selected):**
+
 - Object name (editable text field)
 - Position: X, Y, Z coordinates (editable, updates in real-time)
 - Dimensions: Width, Height, Depth (read-only for library items, editable for custom)
@@ -241,9 +264,11 @@ Six orthographic views with axis mapping:
 - Assembly: Dropdown to assign object to assembly
 
 **Content (when no selection):**
+
 - Message: "Select an object to view properties"
 
 **Content (when assembly selected):**
+
 - Assembly name (editable)
 - Color picker to change assembly highlight color
 - Notes: Multi-line text area
@@ -251,7 +276,9 @@ Six orthographic views with axis mapping:
 - "Ungroup" button to dissolve assembly
 
 #### 1.5 Lumber Library
+
 **Pre-populated Items:**
+
 - **Dimensional Lumber:**
   - 1×3: 0.75" × 2.5" × [96", 120"]
   - 2×3: 1.5" × 2.5" × [96", 120"]
@@ -264,6 +291,7 @@ Six orthographic views with axis mapping:
   - Plywood 3/4": 48" × 96" × 0.75"
 
 **Library Organization:**
+
 - Main categories visible as expandable sections: "Dimensional Lumber", "Sheet Goods", "Custom Items"
 - Each item shows: Nominal name | Actual dimensions
   - Example: "2×4 (1.5" × 3.5" × 96")"
@@ -272,6 +300,7 @@ Six orthographic views with axis mapping:
   - Real-time filtering as user types
 
 **Adding Custom Items:**
+
 - "Add Custom" button at bottom of library
 - Dialog prompts for:
   - Name
@@ -282,7 +311,9 @@ Six orthographic views with axis mapping:
 - Custom items saved globally, appear in library for all projects
 
 #### 1.6 Project Save/Load
+
 **File Operations:**
+
 - **New Project:** Ctrl/Cmd+N - creates blank canvas, prompts for project name
 - **Save:** Ctrl/Cmd+S - saves current project as `.draftplan` file
   - If first save, prompts for filename and location
@@ -292,19 +323,23 @@ Six orthographic views with axis mapping:
 - **Recent Projects:** File menu shows last 10 opened projects
 
 **Auto-Save:**
+
 - Toggle in Settings: Enable/Disable
 - Interval dropdown: 5 min, 15 min, 30 min
 - Auto-save creates temporary backup file alongside main project file
 - On app launch, check for auto-save backup and prompt recovery if found
 
 **Multi-Project Tabs:**
+
 - Each open project appears as tab at top of canvas area
 - Click tab to switch between projects
 - Close tab with X button (prompts to save if unsaved changes)
 - Maximum 5 open tabs to prevent performance issues
 
 #### 1.7 Undo/Redo System
+
 **Requirements:**
+
 - **Undo:** Ctrl/Cmd+Z - reverts last action
 - **Redo:** Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z - reapplies undone action
 - History stack maintains last 50 actions
@@ -320,9 +355,11 @@ Six orthographic views with axis mapping:
 ### Phase 2: Visualization & Export
 
 #### 2.1 Display Modes & Themes
+
 **Three Theme Options:**
 
 **Light Mode:**
+
 - Object outlines: Black (#000000)
 - Object fill: Dark gray (#808080)
 - Text: Black (#000000)
@@ -331,6 +368,7 @@ Six orthographic views with axis mapping:
 - Font: Clean sans-serif (Inter, Roboto, or system default)
 
 **Dark Mode:**
+
 - Object outlines: White (#FFFFFF)
 - Object fill: Light gray (#B0B0B0)
 - Text: White (#FFFFFF)
@@ -339,6 +377,7 @@ Six orthographic views with axis mapping:
 - Font: Same sans-serif
 
 **Blueprint Mode:**
+
 - Object outlines: White (#FFFFFF)
 - Object fill: Light gray (#B0B0B0)
 - Text: White (#FFFFFF)
@@ -347,12 +386,15 @@ Six orthographic views with axis mapping:
 - Font: **Handwritten-style** (Comic Sans MS, or "Architects Daughter" from Google Fonts)
 
 **UI Controls:**
+
 - Theme switcher in toolbar or Settings
 - Display mode toggle: Outline / Filled (applies to all themes)
 - Settings persist across sessions
 
 #### 2.2 Dimension Display
+
 **Object Dimension Text:**
+
 - Shows visible dimensions only based on current view
   - Front view: Width × Height
   - Top view: Width × Depth
@@ -363,16 +405,20 @@ Six orthographic views with axis mapping:
 - Color matches theme (black/white)
 
 **Per-Object Toggle:**
+
 - "Show Dimensions" checkbox in Properties panel
 - Default: enabled for new objects
 
 **Global Toggle:**
+
 - Button in toolbar: "Toggle All Dimensions"
 - Shows/hides dimension text on all objects simultaneously
 - Does not change per-object settings, just overrides display temporarily
 
 #### 2.3 Rulers
+
 **Appearance:**
+
 - Rulers along all four edges of canvas
 - Tick marks at grid intervals
 - Numbers at major intervals (every 12" or 1', depending on zoom)
@@ -380,28 +426,35 @@ Six orthographic views with axis mapping:
 - Ruler marks and text match theme colors
 
 **Behavior:**
+
 - Scroll with canvas pan
 - Scale with zoom
 - Always visible (no hide option in MVP)
 
 #### 2.4 Materials Breakdown
+
 **Table Format:**
+
 - Columns: Item | Quantity | X (Width) | Y (Height) | Z (Depth) | Material | Category
 - Sortable by any column (click column header)
 - Auto-calculates totals (e.g., "Total Pieces: 47")
 
 **Generation:**
+
 - Button in toolbar: "Generate Materials List"
 - Analyzes all objects in project
 - Groups identical pieces (same dimensions and material)
 - Displays in modal dialog or side panel
 
 **Export Options:**
+
 - **CSV Export:** Save table to `.csv` file for spreadsheet import
 - **PDF Export:** Include materials list on final page of PDF export
 
 #### 2.5 Image & PDF Export
+
 **Export Dialog:**
+
 - Button in toolbar: "Export Project"
 - Dialog shows:
   - **View Selection:** Checkboxes for Front, Back, Left, Right, Top, Bottom
@@ -412,6 +465,7 @@ Six orthographic views with axis mapping:
   - **Page Size:** Dropdown (Letter 8.5×11 in MVP, future: A4, Legal, etc.)
 
 **Project Header (on each page):**
+
 - Project name (large, bold)
 - Date of export
 - Total exterior dimensions (Width × Height × Depth)
@@ -419,12 +473,14 @@ Six orthographic views with axis mapping:
 - Notes block (user-editable in Project Details panel)
 
 **PDF Generation:**
+
 - Each selected view on separate page (landscape orientation)
 - Views rendered at print resolution (150 DPI minimum)
 - No scaling - canvas rendered exactly as displayed
 - Materials list on final page (if enabled)
 
 **Image Export:**
+
 - Each view saved as separate PNG file
 - Filenames: `[ProjectName]_[ViewName].png`
   - Example: `Bookshelf_Front.png`
@@ -434,13 +490,16 @@ Six orthographic views with axis mapping:
 ### Phase 3: Advanced Features
 
 #### 3.1 Assembly Grouping
+
 **Creation:**
+
 - Select multiple objects (Ctrl/Cmd+click or box select)
 - Click "Create Assembly" button in toolbar
 - Dialog prompts for assembly name
 - Assembly assigned auto-generated color from standard palette
 
 **Standard Palette (8 colors):**
+
 - Blue: #4A90E2
 - Green: #7ED321
 - Orange: #F5A623
@@ -451,12 +510,13 @@ Six orthographic views with axis mapping:
 - Pink: #FF69B4
 
 **Assemblies Panel:**
+
 - Collapsible panel on left side (below or above Library)
 - List view showing all assemblies:
   ```
   📁 Assemblies
     ├─ 👁️ Front Panel (4 objects)
-    ├─ 👁️ Left Side (6 objects)  
+    ├─ 👁️ Left Side (6 objects)
     └─ 👁️ Back Panel (3 objects)
   ```
 - Eye icon: Toggle assembly visibility (hides all contained objects)
@@ -464,10 +524,12 @@ Six orthographic views with axis mapping:
 - Right-click menu: Edit, Duplicate, Delete
 
 **Visual Indication:**
+
 - Objects in assembly show subtle color tint or thicker outline in assembly color
 - Hovering over assembly name highlights all contained objects
 
 **Properties Panel (Assembly Selected):**
+
 - Assembly name (editable)
 - Color picker: Select color from standard palette
 - Notes field (multi-line)
@@ -475,7 +537,9 @@ Six orthographic views with axis mapping:
 - "Ungroup" button: Dissolve assembly, keep objects
 
 #### 3.2 Annotation Tools
+
 **Text Annotations:**
+
 - "Add Text" tool button in toolbar
 - Click on canvas to place text box
 - Type content directly
@@ -487,6 +551,7 @@ Six orthographic views with axis mapping:
 - View-specific: only visible in view where created
 
 **Line Annotations:**
+
 - "Add Line" tool button in toolbar
 - Click start point, click end point to place line
 - **Snap to Objects:** If click within 10 pixels of object edge/corner, snap to that point
@@ -498,35 +563,44 @@ Six orthographic views with axis mapping:
 - View-specific: only visible in view where created
 
 **Annotation Management:**
+
 - Annotations appear in layers list (separate from objects)
 - Select annotation to edit properties
 - Delete key removes selected annotation
 
 #### 3.3 Rotation System
+
 **Enabling Rotation:**
+
 - "Enable Rotation" toggle in Properties panel (per-object)
 - When enabled, rotation controls become active
 
 **Rotation Controls:**
+
 - X, Y, Z rotation angle fields in Properties (0-359 degrees)
 - Increment/decrement buttons (±90° quick buttons)
 - Manual entry constrained to whole-degree increments (no decimals)
 
 **Visual Feedback:**
+
 - Rotation handles appear on selected object when rotation enabled
 - Objects render correctly in all views based on rotation
 
 **Constraint:**
+
 - Rotation defaults to axis-aligned (0°, 90°, 180°, 270°)
 - User can enter any whole degree value manually
 
 #### 3.4 Object Duplication & Arrays
+
 **Single Duplication:**
+
 - Ctrl/Cmd+D: Duplicate selected object(s)
 - Duplicate appears offset by one grid unit
 - Properties remain identical except position
 
 **Array Tool:**
+
 - Select object, click "Create Array" button
 - Dialog prompts for:
   - **Direction:** X, Y, or Z axis
@@ -537,18 +611,22 @@ Six orthographic views with axis mapping:
 - Click "Create" to generate array
 
 #### 3.5 Manual Dimension Lines
+
 **Creation:**
+
 - "Add Dimension" tool button in toolbar
 - Click first point, click second point
 - Dimension line appears with auto-calculated distance
 
 **Properties:**
+
 - Distance (auto-calculated, read-only by default)
 - "Override Text" checkbox: Allows custom text instead of calculated distance
 - Line offset: Distance from objects (adjustable)
 - Text position: Above/below line (toggle)
 
 **Visual Style:**
+
 - Lines with extension marks and arrows at endpoints
 - Text centered on line
 - Matches theme colors
@@ -558,18 +636,23 @@ Six orthographic views with axis mapping:
 ### Phase 4: Polish & Power Features
 
 #### 4.1 Metric Support
+
 **Settings Option:**
+
 - "Units" dropdown in Settings: Imperial / Metric
 - Affects all dimension displays globally
 - Conversions applied in real-time
 
 **Display Changes:**
+
 - Imperial: inches (") and feet (') notation
 - Metric: millimeters (mm) and meters (m) notation
 - Library shows both nominal and actual dimensions in selected units
 
 #### 4.2 Joinery Indicators
+
 **Visual System:**
+
 - Select two objects, click "Add Joint"
 - Click location on first object where joint occurs
 - Joint type dropdown: Butt, Pocket Hole, Dado, Mortise & Tenon, Dowel, Biscuit
@@ -577,6 +660,7 @@ Six orthographic views with axis mapping:
 - Color-coded by joint type
 
 **Joint Properties (in Properties panel when joint selected):**
+
 - Joint type
 - Connected objects (read-only list)
 - Location (X, Y, Z)
@@ -584,13 +668,17 @@ Six orthographic views with axis mapping:
 - Delete button
 
 #### 4.3 Advanced Occlusion
+
 **Polygon Clipping:**
+
 - For rotated objects, implement proper polygon intersection
 - Calculate visible portions of each object based on all objects in front
 - Render only visible portions (more accurate than depth sorting alone)
 
 #### 4.4 Keyboard Shortcuts Reference
+
 **Essential Shortcuts:**
+
 - **Ctrl/Cmd+N:** New Project
 - **Ctrl/Cmd+O:** Open Project
 - **Ctrl/Cmd+S:** Save
@@ -605,6 +693,7 @@ Six orthographic views with axis mapping:
 - **Arrow Keys:** Move selected object(s) by one grid unit
 
 **Help Dialog:**
+
 - "Keyboard Shortcuts" in Help menu
 - Shows all shortcuts in categorized table
 
@@ -613,6 +702,7 @@ Six orthographic views with axis mapping:
 ## User Interface Layout
 
 ### Main Window Structure
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Menu Bar: File | Edit | View | Tools | Help                    │
@@ -645,6 +735,7 @@ Six orthographic views with axis mapping:
 ```
 
 ### Panel Collapse Behavior
+
 - All panels (Library, Assemblies, Properties, Project Details) have collapse/expand buttons
 - Collapsed panels show only narrow bar with icon
 - Keyboard shortcut to toggle each panel (configurable)
@@ -656,6 +747,7 @@ Six orthographic views with axis mapping:
 **Location:** Separate collapsible panel (top-left or docked with Library)
 
 **Content:**
+
 - **Project Name:** Editable text field
 - **Created Date:** Read-only, auto-populated
 - **Modified Date:** Read-only, auto-updates on save
@@ -668,6 +760,7 @@ Six orthographic views with axis mapping:
   - Example: "Master bedroom built-in bookshelf with crown molding and adjustable shelves"
 
 **Usage:**
+
 - Information appears in project header on export
 - Helps organize and document projects
 
@@ -680,19 +773,22 @@ Six orthographic views with axis mapping:
 **Sections:**
 
 ### General
+
 - **Units:** Dropdown (Imperial / Metric)
 - **Theme:** Dropdown (Light / Dark / Blueprint)
-- **Auto-Save:** 
+- **Auto-Save:**
   - Enable/Disable toggle
   - Interval dropdown (5 min / 15 min / 30 min)
 
 ### Display
+
 - **Grid Visible:** Checkbox (default: on)
 - **Rulers Visible:** Checkbox (default: on)
 - **Dimension Text Visible:** Checkbox (default: on)
 - **Default Display Mode:** Dropdown (Outline / Filled)
 
 ### Keyboard Shortcuts
+
 - Table showing all shortcuts with ability to customize (Phase 4 feature)
 
 ---
@@ -700,6 +796,7 @@ Six orthographic views with axis mapping:
 ## Success Criteria
 
 ### Phase 1 Completion
+
 - [ ] User can create new project
 - [ ] User can place objects from library onto canvas
 - [ ] User can move objects in current view
@@ -712,6 +809,7 @@ Six orthographic views with axis mapping:
 - [ ] Zoom and pan work smoothly
 
 ### Phase 2 Completion
+
 - [ ] Three themes implemented (Light/Dark/Blueprint)
 - [ ] Dimension text displays correctly on objects
 - [ ] Rulers show and update with zoom/pan
@@ -721,6 +819,7 @@ Six orthographic views with axis mapping:
 - [ ] Project header appears on exports
 
 ### Phase 3 Completion
+
 - [ ] Assembly grouping creates and manages assemblies
 - [ ] Assemblies panel shows/toggles visibility
 - [ ] Text annotations can be placed and edited
@@ -730,6 +829,7 @@ Six orthographic views with axis mapping:
 - [ ] Array tool creates evenly-spaced copies
 
 ### Phase 4 Completion
+
 - [ ] Metric units support implemented
 - [ ] Joinery indicators can be placed and edited
 - [ ] Advanced occlusion rendering (if needed)
@@ -740,6 +840,7 @@ Six orthographic views with axis mapping:
 ## Known Constraints & Limitations
 
 ### MVP Scope
+
 - **Axis-aligned only** by default (rotation must be explicitly enabled)
 - **Simple depth sorting** for occlusion (Phase 1)
 - **Imperial units only** initially (metric in Phase 4)
@@ -747,11 +848,13 @@ Six orthographic views with axis mapping:
 - **Basic library** (expandable by user)
 
 ### Performance Considerations
+
 - Limit to ~500 objects per project for smooth performance
 - Limit to 5 open project tabs simultaneously
 - Large assemblies (>50 objects) may impact view switching speed
 
 ### Future Enhancements (Post-Phase 4)
+
 - Cloud sync for projects
 - Collaborative editing
 - Template library (common projects)
@@ -767,23 +870,27 @@ Six orthographic views with axis mapping:
 ## Development Notes
 
 ### Testing Strategy
+
 - **Unit tests:** Core 3D math functions (projection, rotation, collision)
 - **Integration tests:** Save/load, export, undo/redo
 - **Manual testing:** UI interactions, theme switching, real-world projects
 
 ### Performance Optimization
+
 - Implement object culling (don't render off-screen objects)
 - Cache rendered frames when nothing changes
 - Debounce property updates during drag operations
 - Use requestAnimationFrame for smooth animations
 
 ### Accessibility Considerations
+
 - Keyboard navigation for all tools
 - High contrast mode option
 - Tooltips on all toolbar buttons
 - Screen reader compatibility (label all interactive elements)
 
 ### Cross-Platform Considerations
+
 - Test on both Windows and macOS
 - Platform-specific keyboard shortcuts (Ctrl vs Cmd)
 - File path handling (Windows backslashes vs Unix forward slashes)
@@ -794,6 +901,7 @@ Six orthographic views with axis mapping:
 ## Appendix: Example Projects
 
 ### Example 1: Simple Bookshelf
+
 - 4× vertical supports (2×4 × 72")
 - 6× horizontal shelves (1×12 × 36")
 - 2× side panels (plywood 1/2" × 12" × 72")
@@ -801,6 +909,7 @@ Six orthographic views with axis mapping:
 - Assembly: Front Panel, Left Side, Right Side
 
 ### Example 2: Picture Frame
+
 - 4× frame pieces (1×3 with mitered corners)
 - 1× backing (plywood 1/8")
 - 1× glass (custom dimensions)
@@ -808,6 +917,7 @@ Six orthographic views with axis mapping:
 - Annotations: Joint locations, glass size
 
 ### Example 3: Built-in Cabinet
+
 - Multiple assemblies: Face Frame, Carcass, Shelves, Doors
 - Complex joinery: Pocket holes, dados, hinges
 - Detailed materials list for lumber yard
@@ -831,13 +941,16 @@ Six orthographic views with axis mapping:
 ## Document Control
 
 **Revision History:**
+
 - v1.0 (2024-12-12): Initial PRD - Jack O'Neill & Claude
 
 **Approval:**
+
 - Product Owner: Jack O'Neill
 - Development: Claude Code
 
 **Next Steps:**
+
 1. Review and approve PRD
 2. Create Phase 1 implementation plan
 3. Set up project repository
@@ -845,4 +958,4 @@ Six orthographic views with axis mapping:
 
 ---
 
-*End of Product Requirements Document*
+_End of Product Requirements Document_

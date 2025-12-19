@@ -6,6 +6,7 @@ interface UIState extends ProjectSettings {
   libraryPanelOpen: boolean;
   propertiesPanelOpen: boolean;
   controlsPanelOpen: boolean;
+  cutListModalOpen: boolean;
   majorGridSize: number; // Size in inches for major grid lines
   minorGridVisible: boolean; // Toggle for 1/16" grid visibility
   snapIncrement: number; // Snap increment in inches for arrow key movement
@@ -17,6 +18,7 @@ interface UIState extends ProjectSettings {
   toggleLibraryPanel: () => void;
   togglePropertiesPanel: () => void;
   toggleControlsPanel: () => void;
+  toggleCutListModal: () => void;
   setMajorGridSize: (size: number) => void;
   toggleMinorGrid: () => void;
   setSnapIncrement: (increment: number) => void;
@@ -29,6 +31,7 @@ export const useUIStore = create<UIState>((set) => ({
   libraryPanelOpen: true,
   propertiesPanelOpen: true,
   controlsPanelOpen: true, // Default to visible
+  cutListModalOpen: false, // Default to closed
   majorGridSize: 1, // Default to 1 inch
   minorGridVisible: true, // Default to visible
   snapIncrement: 1, // Default to 1 inch
@@ -42,6 +45,8 @@ export const useUIStore = create<UIState>((set) => ({
     set((state) => ({ propertiesPanelOpen: !state.propertiesPanelOpen })),
   toggleControlsPanel: () =>
     set((state) => ({ controlsPanelOpen: !state.controlsPanelOpen })),
+  toggleCutListModal: () =>
+    set((state) => ({ cutListModalOpen: !state.cutListModalOpen })),
   setMajorGridSize: (size) => set({ majorGridSize: size }),
   toggleMinorGrid: () => set((state) => ({ minorGridVisible: !state.minorGridVisible })),
   setSnapIncrement: (increment) => set({ snapIncrement: increment }),

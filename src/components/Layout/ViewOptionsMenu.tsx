@@ -19,6 +19,7 @@ export function ViewOptionsMenu() {
     toggleLibraryPanel,
     togglePropertiesPanel,
     toggleControlsPanel,
+    toggleCutListModal,
     setTheme,
   } = useUIStore();
 
@@ -126,6 +127,13 @@ export function ViewOptionsMenu() {
               <span className="text-xs text-gray-500">
                 {controlsPanelOpen && '✓'}
               </span>
+            </button>
+
+            <button
+              onClick={toggleCutListModal}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-sm hover:bg-gray-100 rounded transition-colors"
+            >
+              <span>Cut List</span>
             </button>
           </div>
 

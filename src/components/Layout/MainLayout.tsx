@@ -6,11 +6,12 @@ import { ViewOptionsMenu } from './ViewOptionsMenu';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { LibraryPanel } from '@/components/Library/LibraryPanel';
 import { PropertiesPanel } from '@/components/Properties/PropertiesPanel';
+import { CutListModal } from '@/components/CutList/CutListModal';
 import { useUIStore } from '@/stores/uiStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export function MainLayout() {
-  const { libraryPanelOpen, propertiesPanelOpen, theme } = useUIStore();
+  const { libraryPanelOpen, propertiesPanelOpen, cutListModalOpen, theme } = useUIStore();
 
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
@@ -67,6 +68,9 @@ export function MainLayout() {
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsHelp />
+
+      {/* Cut List Modal */}
+      {cutListModalOpen && <CutListModal />}
     </div>
   );
 }
