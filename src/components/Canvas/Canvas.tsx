@@ -8,6 +8,7 @@ import { ViewType, DraftObject, LumberLibraryItem } from '@/types';
 import { CanvasControls } from './CanvasControls';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
+import { computeWorldTransform, isNodeVisible, getEffectiveColor } from '@/lib/hierarchy/transforms';
 
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -261,10 +262,11 @@ export function Canvas() {
           const newObject: DraftObject = {
             ...obj,
             id: newId,
-            position: {
-              x: obj.position.x + 2, // Offset by 2 inches
-              y: obj.position.y + 2,
-              z: obj.position.z,
+            parentId: undefined,  // Pasted objects start at root level
+            localPosition: {
+              x: obj.localPosition.x + 2, // Offset by 2 inches
+              y: obj.localPosition.y + 2,
+              z: obj.localPosition.z,
             },
           };
           addObject(newObject);
@@ -289,10 +291,11 @@ export function Canvas() {
           const newObject: DraftObject = {
             ...obj,
             id: newId,
-            position: {
-              x: obj.position.x + 2, // Offset by 2 inches
-              y: obj.position.y + 2,
-              z: obj.position.z,
+            parentId: undefined,  // Duplicated objects start at root level
+            localPosition: {
+              x: obj.localPosition.x + 2, // Offset by 2 inches
+              y: obj.localPosition.y + 2,
+              z: obj.localPosition.z,
             },
           };
           addObject(newObject);
@@ -427,36 +430,45 @@ export function Canvas() {
       const isSelected = selectedObjectIds.includes(obj.id);
       const isPreviewSelected = previewSelectedIds.includes(obj.id);
 
-      // Check if object belongs to a hidden assembly
-      const assembly = obj.assemblyId ? assemblies.find((a) => a.id === obj.assemblyId) : null;
-      const isVisible = !assembly || assembly.visible;
+      // Compute world transform from hierarchy
+      const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
+
+      // Check visibility (respects parent assembly visibility)
+      const isVisible = isNodeVisible(obj.id, objects, assemblies);
+
+      // Get effective color (if useAssemblyColor is enabled)
+      const effectiveColor = obj.useAssemblyColor
+        ? getEffectiveColor(obj.id, objects, assemblies)
+        : null;
 
       if (!currentMeshes.has(obj.id)) {
-        const mesh = createObjectMesh(obj, isSelected);
+        const mesh = createObjectMesh(obj, isSelected, effectiveColor);
         mesh.visible = isVisible;
         currentMeshes.set(obj.id, mesh);
         scene.add(mesh);
       } else {
         // Update existing mesh position, rotation, and selection state
         const mesh = currentMeshes.get(obj.id)!;
+
+        // Use world transform position
         mesh.position.set(
-          obj.position.x + obj.dimensions.width / 2,
-          obj.position.y + obj.dimensions.height / 2,
-          obj.position.z + obj.dimensions.depth / 2
+          worldTransform.position.x + obj.dimensions.width / 2,
+          worldTransform.position.y + obj.dimensions.height / 2,
+          worldTransform.position.z + obj.dimensions.depth / 2
         );
 
-        // Update rotation (convert from degrees to radians)
+        // Use world transform rotation (convert from degrees to radians)
         mesh.rotation.set(
-          (obj.rotation.x * Math.PI) / 180,
-          (obj.rotation.y * Math.PI) / 180,
-          (obj.rotation.z * Math.PI) / 180
+          (worldTransform.rotation.x * Math.PI) / 180,
+          (worldTransform.rotation.y * Math.PI) / 180,
+          (worldTransform.rotation.z * Math.PI) / 180
         );
 
-        // Update visibility based on assembly
+        // Update visibility based on hierarchy
         mesh.visible = isVisible;
 
-        // Update selection highlight (selected takes priority over preview)
-        updateMeshSelection(mesh, isSelected, isPreviewSelected);
+        // Update selection highlight and color
+        updateMeshSelection(mesh, isSelected, isPreviewSelected, effectiveColor);
       }
     });
   }, [objects, selectedObjectIds, previewSelectedIds, assemblies]);
@@ -497,7 +509,7 @@ export function Canvas() {
         id: `obj-${Date.now()}`,
         type: libraryItem.category === 'Sheet Goods' ? 'sheet' : 'lumber',
         name: libraryItem.nominalName,
-        position: worldPos,
+        localPosition: worldPos,  // No parent, so local = world
         dimensions: libraryItem.actualDimensions,
         rotation: { x: 0, y: 0, z: 0 },
         material: libraryItem.material,
@@ -507,6 +519,7 @@ export function Canvas() {
         showDimensions: true,
         rotationEnabled: false,
         notes: '',
+        useAssemblyColor: false,
       };
 
       addObject(newObject);
@@ -1166,7 +1179,7 @@ export function Canvas() {
 /**
  * Create a Three.js mesh for a DraftObject
  */
-function createObjectMesh(obj: DraftObject, isSelected: boolean = false): THREE.Group {
+function createObjectMesh(obj: DraftObject, isSelected: boolean = false, effectiveColor: string | null = null): THREE.Group {
   const group = new THREE.Group();
 
   // Ensure dimensions are valid (minimum 0.001 to avoid WebGL errors)
@@ -1178,9 +1191,17 @@ function createObjectMesh(obj: DraftObject, isSelected: boolean = false): THREE.
   // Create box geometry
   const geometry = new THREE.BoxGeometry(width, height, depth);
 
-  // Create material (gray fill or blue if selected)
+  // Determine color: selected = blue, effectiveColor if set, otherwise gray
+  let meshColor = 0x808080; // Default gray
+  if (isSelected) {
+    meshColor = 0x4A90E2; // Blue when selected
+  } else if (effectiveColor) {
+    meshColor = parseInt(effectiveColor.replace('#', ''), 16); // Assembly color
+  }
+
+  // Create material
   const material = new THREE.MeshBasicMaterial({
-    color: isSelected ? 0x4A90E2 : 0x808080,
+    color: meshColor,
     wireframe: false,
   });
 
@@ -1198,19 +1219,7 @@ function createObjectMesh(obj: DraftObject, isSelected: boolean = false): THREE.
   mesh.add(wireframe);
   group.add(mesh);
 
-  // Set position (offset by half dimensions so origin is at bottom-left-back corner)
-  group.position.set(
-    obj.position.x + width / 2,
-    obj.position.y + height / 2,
-    obj.position.z + depth / 2
-  );
-
-  // Set rotation (convert from degrees to radians)
-  group.rotation.set(
-    (obj.rotation.x * Math.PI) / 180,
-    (obj.rotation.y * Math.PI) / 180,
-    (obj.rotation.z * Math.PI) / 180
-  );
+  // Position will be set by the caller using world transform
 
   return group;
 }
@@ -1218,11 +1227,18 @@ function createObjectMesh(obj: DraftObject, isSelected: boolean = false): THREE.
 /**
  * Update mesh selection state
  */
-function updateMeshSelection(group: THREE.Group, isSelected: boolean, isPreviewSelected: boolean = false): void {
+function updateMeshSelection(group: THREE.Group, isSelected: boolean, isPreviewSelected: boolean = false, effectiveColor: string | null = null): void {
   group.traverse((child) => {
     if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
-      // Selected = blue, preview = light cyan, normal = gray
-      const color = isSelected ? 0x4A90E2 : (isPreviewSelected ? 0x60D4F4 : 0x808080);
+      // Selected = blue, preview = light cyan, effectiveColor if set, otherwise gray
+      let color = 0x808080; // Default gray
+      if (isSelected) {
+        color = 0x4A90E2; // Blue when selected
+      } else if (isPreviewSelected) {
+        color = 0x60D4F4; // Light cyan when preview selected
+      } else if (effectiveColor) {
+        color = parseInt(effectiveColor.replace('#', ''), 16); // Assembly color
+      }
       child.material.color.setHex(color);
     }
     if (child instanceof THREE.LineSegments && child.material instanceof THREE.LineBasicMaterial) {
