@@ -1169,6 +1169,7 @@ export function Canvas() {
       {cameraRef.current && canvasDimensions.width > 0 && (
         <DimensionOverlay
           objects={objects}
+          assemblies={assemblies}
           camera={cameraRef.current}
           currentView={camera.currentView}
           canvasWidth={canvasDimensions.width}

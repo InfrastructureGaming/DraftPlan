@@ -1,9 +1,11 @@
 import * as THREE from 'three';
-import { DraftObject, ViewType } from '@/types';
+import { DraftObject, ViewType, Assembly } from '@/types';
 import { useUIStore } from '@/stores/uiStore';
+import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 interface DimensionOverlayProps {
   objects: DraftObject[];
+  assemblies: Assembly[];
   camera: THREE.OrthographicCamera;
   currentView: ViewType;
   canvasWidth: number;
@@ -12,6 +14,7 @@ interface DimensionOverlayProps {
 
 export function DimensionOverlay({
   objects,
+  assemblies,
   camera,
   currentView,
   canvasWidth,
@@ -24,10 +27,13 @@ export function DimensionOverlay({
 
   // Calculate screen position for an object's center
   const getScreenPosition = (obj: DraftObject): { x: number; y: number } | null => {
+    // Get world position from hierarchy
+    const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
+
     // Calculate object center in world space
-    const centerX = obj.position.x + obj.dimensions.width / 2;
-    const centerY = obj.position.y + obj.dimensions.height / 2;
-    const centerZ = obj.position.z + obj.dimensions.depth / 2;
+    const centerX = worldTransform.position.x + obj.dimensions.width / 2;
+    const centerY = worldTransform.position.y + obj.dimensions.height / 2;
+    const centerZ = worldTransform.position.z + obj.dimensions.depth / 2;
 
     const worldPos = new THREE.Vector3(centerX, centerY, centerZ);
 

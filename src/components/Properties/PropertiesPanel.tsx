@@ -1,14 +1,20 @@
 import { useProjectStore } from '@/stores/projectStore';
+import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 export function PropertiesPanel() {
-  const { objects, selectedObjectIds, updateObject } = useProjectStore();
+  const { objects, assemblies, selectedObjectIds, updateObject, updateObjectPosition } = useProjectStore();
 
   // Get the first selected object
   const selectedObject = selectedObjectIds.length > 0
     ? objects.find((obj) => obj.id === selectedObjectIds[0])
     : null;
 
-  if (!selectedObject) {
+  // Get world transform for selected object
+  const worldTransform = selectedObject
+    ? computeWorldTransform(selectedObject.id, objects, assemblies)
+    : null;
+
+  if (!selectedObject || !worldTransform) {
     return (
       <div className="flex flex-col h-full p-4">
         <h2 className="text-sm font-semibold mb-2 text-gray-800">Properties</h2>
@@ -28,9 +34,9 @@ export function PropertiesPanel() {
       if (selectedObject.gridSnap) {
         numValue = Math.round(numValue); // Snap to 1-inch grid
       }
-      updateObject(selectedObject.id, {
-        position: { ...selectedObject.position, [axis]: numValue },
-      });
+      // Update world position (will be converted to local position in store)
+      const newWorldPos = { ...worldTransform.position, [axis]: numValue };
+      updateObjectPosition(selectedObject.id, newWorldPos);
     }
   };
 
@@ -92,7 +98,7 @@ export function PropertiesPanel() {
               <label className="block text-xs text-gray-500 mb-1">X</label>
               <input
                 type="number"
-                value={selectedObject.position.x}
+                value={worldTransform.position.x}
                 onChange={(e) => handlePositionChange('x', e.target.value)}
                 step="1"
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -102,7 +108,7 @@ export function PropertiesPanel() {
               <label className="block text-xs text-gray-500 mb-1">Y</label>
               <input
                 type="number"
-                value={selectedObject.position.y}
+                value={worldTransform.position.y}
                 onChange={(e) => handlePositionChange('y', e.target.value)}
                 step="1"
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -112,7 +118,7 @@ export function PropertiesPanel() {
               <label className="block text-xs text-gray-500 mb-1">Z</label>
               <input
                 type="number"
-                value={selectedObject.position.z}
+                value={worldTransform.position.z}
                 onChange={(e) => handlePositionChange('z', e.target.value)}
                 step="1"
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
