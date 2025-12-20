@@ -58,7 +58,7 @@ export function AssemblyItem({ assembly }: AssemblyItemProps) {
             {assembly.name}
           </div>
           <div className={`text-xs ${colors.textMuted}`}>
-            {assembly.objectIds.length} {assembly.objectIds.length === 1 ? 'object' : 'objects'}
+            {assembly.childIds.length} {assembly.childIds.length === 1 ? 'child' : 'children'}
           </div>
         </div>
 
