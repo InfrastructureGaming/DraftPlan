@@ -1,5 +1,16 @@
 import { create } from 'zustand';
-import { DraftObject, Assembly, CameraState, ViewType, ProjectInfo, ProjectFile } from '@/types';
+import { DraftObject, Assembly, CameraState, ViewType, ProjectInfo, ProjectFile, Vector3D } from '@/types';
+import {
+  computeWorldTransform,
+  worldToLocalPosition,
+  isNodeVisible,
+} from '@/lib/hierarchy/transforms';
+import {
+  reparentNode as reparentNodeUtil,
+  deleteNodeCascade,
+  moveNodeInWorldSpace,
+  reorderChildren as reorderChildrenUtil,
+} from '@/lib/hierarchy/operations';
 
 interface HistorySnapshot {
   objects: DraftObject[];
@@ -38,13 +49,19 @@ interface ProjectState {
   setZoom: (zoom: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
 
-  // Assembly management
-  createAssembly: (name: string, objectIds: string[], color?: string) => void;
+  // Assembly management (hierarchical)
+  createAssembly: (name: string, childIds: string[], color?: string, parentId?: string) => void;
   updateAssembly: (id: string, updates: Partial<Assembly>) => void;
-  deleteAssembly: (id: string) => void;
-  toggleAssemblyVisibility: (id: string) => void;
+  deleteNode: (id: string) => void;  // Replaces deleteAssembly, works for objects too
+  toggleNodeVisibility: (id: string) => void;
+  toggleAssemblyExpansion: (id: string) => void;
   selectAssemblyObjects: (id: string) => void;
-  reorderAssemblies: (fromIndex: number, toIndex: number) => void;
+  reparentNode: (nodeId: string, newParentId?: string) => void;
+  reorderChildren: (parentId: string | undefined, fromIndex: number, toIndex: number) => void;
+
+  // Object management (hierarchy-aware)
+  updateObjectPosition: (id: string, worldPosition: Vector3D) => void;  // Updates localPosition
+  updateObjectRotation: (id: string, rotation: Vector3D) => void;
 
   // Undo/Redo
   undo: () => void;
@@ -267,7 +284,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     })),
 
   // Assembly management implementations
-  createAssembly: (name, objectIds, color) =>
+  createAssembly: (name, childIds, color, parentId) =>
     set((state) => {
       const snapshot = createSnapshot(state);
       const newAssembly: Assembly = {
@@ -276,16 +293,31 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         color: color || `#${Math.floor(Math.random() * 16777215).toString(16)}`,
         visible: true,
         notes: '',
-        objectIds,
+        parentId,
+        childIds,
+        isExpanded: true,
       };
 
-      // Update objects to reference this assembly
+      // Update children to reference this assembly as parent
       const updatedObjects = state.objects.map((obj) =>
-        objectIds.includes(obj.id) ? { ...obj, assemblyId: newAssembly.id } : obj
+        childIds.includes(obj.id) ? { ...obj, parentId: newAssembly.id } : obj
       );
 
+      const updatedAssemblies = state.assemblies.map((asm) =>
+        childIds.includes(asm.id) ? { ...asm, parentId: newAssembly.id } : asm
+      );
+
+      // If this assembly has a parent, add it to parent's childIds
+      const finalAssemblies = parentId
+        ? updatedAssemblies.map((asm) =>
+            asm.id === parentId && !asm.childIds.includes(newAssembly.id)
+              ? { ...asm, childIds: [...asm.childIds, newAssembly.id] }
+              : asm
+          )
+        : updatedAssemblies;
+
       return {
-        assemblies: [...state.assemblies, newAssembly],
+        assemblies: [...finalAssemblies, newAssembly],
         objects: updatedObjects,
         hasUnsavedChanges: true,
         projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
@@ -308,17 +340,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       };
     }),
 
-  deleteAssembly: (id) =>
+  deleteNode: (id) =>
     set((state) => {
       const snapshot = createSnapshot(state);
-      // Remove assembly reference from all objects
-      const updatedObjects = state.objects.map((obj) =>
-        obj.assemblyId === id ? { ...obj, assemblyId: undefined } : obj
+      const { objects: updatedObjects, assemblies: updatedAssemblies } = deleteNodeCascade(
+        id,
+        state.objects,
+        state.assemblies
       );
 
       return {
-        assemblies: state.assemblies.filter((assembly) => assembly.id !== id),
         objects: updatedObjects,
+        assemblies: updatedAssemblies,
+        selectedObjectIds: state.selectedObjectIds.filter((sid) => sid !== id),
         hasUnsavedChanges: true,
         projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
         undoStack: [...state.undoStack, snapshot],
@@ -326,7 +360,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       };
     }),
 
-  toggleAssemblyVisibility: (id) =>
+  toggleNodeVisibility: (id) =>
     set((state) => {
       const snapshot = createSnapshot(state);
       return {
@@ -340,26 +374,96 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       };
     }),
 
+  toggleAssemblyExpansion: (id) =>
+    set((state) => ({
+      assemblies: state.assemblies.map((assembly) =>
+        assembly.id === id ? { ...assembly, isExpanded: !assembly.isExpanded } : assembly
+      ),
+    })),
+
   selectAssemblyObjects: (id) =>
     set((state) => {
       const assembly = state.assemblies.find((a) => a.id === id);
       if (!assembly) return state;
 
       return {
-        selectedObjectIds: assembly.objectIds,
+        selectedObjectIds: assembly.childIds,
       };
     }),
 
-  reorderAssemblies: (fromIndex, toIndex) =>
+  reparentNode: (nodeId, newParentId) =>
     set((state) => {
-      const newAssemblies = [...state.assemblies];
-      const [removed] = newAssemblies.splice(fromIndex, 1);
-      newAssemblies.splice(toIndex, 0, removed);
+      const snapshot = createSnapshot(state);
+      const { objects: updatedObjects, assemblies: updatedAssemblies } = reparentNodeUtil(
+        nodeId,
+        newParentId,
+        state.objects,
+        state.assemblies
+      );
 
       return {
-        assemblies: newAssemblies,
+        objects: updatedObjects,
+        assemblies: updatedAssemblies,
         hasUnsavedChanges: true,
         projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  reorderChildren: (parentId, fromIndex, toIndex) =>
+    set((state) => {
+      const { objects: updatedObjects, assemblies: updatedAssemblies } = reorderChildrenUtil(
+        parentId,
+        fromIndex,
+        toIndex,
+        state.objects,
+        state.assemblies
+      );
+
+      return {
+        objects: updatedObjects,
+        assemblies: updatedAssemblies,
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+      };
+    }),
+
+  updateObjectPosition: (id, worldPosition) =>
+    set((state) => {
+      const object = state.objects.find((obj) => obj.id === id);
+      if (!object) return state;
+
+      const snapshot = createSnapshot(state);
+      const newLocalPosition = worldToLocalPosition(
+        worldPosition,
+        object.parentId,
+        state.objects,
+        state.assemblies
+      );
+
+      return {
+        objects: state.objects.map((obj) =>
+          obj.id === id ? { ...obj, localPosition: newLocalPosition } : obj
+        ),
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  updateObjectRotation: (id, rotation) =>
+    set((state) => {
+      const snapshot = createSnapshot(state);
+      return {
+        objects: state.objects.map((obj) =>
+          obj.id === id ? { ...obj, rotation } : obj
+        ),
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
       };
     }),
 }));
