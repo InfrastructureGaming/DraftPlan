@@ -38,6 +38,14 @@ interface ProjectState {
   setZoom: (zoom: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
 
+  // Assembly management
+  createAssembly: (name: string, objectIds: string[], color?: string) => void;
+  updateAssembly: (id: string, updates: Partial<Assembly>) => void;
+  deleteAssembly: (id: string) => void;
+  toggleAssemblyVisibility: (id: string) => void;
+  selectAssemblyObjects: (id: string) => void;
+  reorderAssemblies: (fromIndex: number, toIndex: number) => void;
+
   // Undo/Redo
   undo: () => void;
   redo: () => void;
@@ -257,4 +265,101 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       currentFilePath: filePath,
       hasUnsavedChanges: false,
     })),
+
+  // Assembly management implementations
+  createAssembly: (name, objectIds, color) =>
+    set((state) => {
+      const snapshot = createSnapshot(state);
+      const newAssembly: Assembly = {
+        id: `assembly-${Date.now()}`,
+        name,
+        color: color || `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+        visible: true,
+        notes: '',
+        objectIds,
+      };
+
+      // Update objects to reference this assembly
+      const updatedObjects = state.objects.map((obj) =>
+        objectIds.includes(obj.id) ? { ...obj, assemblyId: newAssembly.id } : obj
+      );
+
+      return {
+        assemblies: [...state.assemblies, newAssembly],
+        objects: updatedObjects,
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  updateAssembly: (id, updates) =>
+    set((state) => {
+      const snapshot = createSnapshot(state);
+      return {
+        assemblies: state.assemblies.map((assembly) =>
+          assembly.id === id ? { ...assembly, ...updates } : assembly
+        ),
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  deleteAssembly: (id) =>
+    set((state) => {
+      const snapshot = createSnapshot(state);
+      // Remove assembly reference from all objects
+      const updatedObjects = state.objects.map((obj) =>
+        obj.assemblyId === id ? { ...obj, assemblyId: undefined } : obj
+      );
+
+      return {
+        assemblies: state.assemblies.filter((assembly) => assembly.id !== id),
+        objects: updatedObjects,
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  toggleAssemblyVisibility: (id) =>
+    set((state) => {
+      const snapshot = createSnapshot(state);
+      return {
+        assemblies: state.assemblies.map((assembly) =>
+          assembly.id === id ? { ...assembly, visible: !assembly.visible } : assembly
+        ),
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+        undoStack: [...state.undoStack, snapshot],
+        redoStack: [],
+      };
+    }),
+
+  selectAssemblyObjects: (id) =>
+    set((state) => {
+      const assembly = state.assemblies.find((a) => a.id === id);
+      if (!assembly) return state;
+
+      return {
+        selectedObjectIds: assembly.objectIds,
+      };
+    }),
+
+  reorderAssemblies: (fromIndex, toIndex) =>
+    set((state) => {
+      const newAssemblies = [...state.assemblies];
+      const [removed] = newAssemblies.splice(fromIndex, 1);
+      newAssemblies.splice(toIndex, 0, removed);
+
+      return {
+        assemblies: newAssemblies,
+        hasUnsavedChanges: true,
+        projectInfo: { ...state.projectInfo, modified: new Date().toISOString() },
+      };
+    }),
 }));

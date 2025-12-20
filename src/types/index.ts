@@ -18,9 +18,13 @@ export interface DraftObject {
   id: string;
   type: 'lumber' | 'sheet' | 'custom';
   name: string;
-  position: Vector3D;
+
+  // Hierarchical positioning
+  parentId?: string;              // Parent assembly or object ID
+  localPosition: Vector3D;        // Position relative to parent (or world if no parent)
+
   dimensions: Dimensions;
-  rotation: Vector3D;
+  rotation: Vector3D;             // Local rotation relative to parent
   material: string;
   category: string;
   tags: string[];
@@ -28,7 +32,9 @@ export interface DraftObject {
   showDimensions: boolean;
   rotationEnabled: boolean;
   notes: string;
-  assemblyId?: string;
+
+  // Color inheritance
+  useAssemblyColor: boolean;      // If true, inherit parent assembly's color
 }
 
 export interface Assembly {
@@ -37,7 +43,11 @@ export interface Assembly {
   color: string;
   visible: boolean;
   notes: string;
-  objectIds: string[];
+
+  // Hierarchical structure
+  parentId?: string;              // Parent assembly ID (for nested assemblies)
+  childIds: string[];             // Array of child IDs (assemblies or objects)
+  isExpanded: boolean;            // UI state for tree view
 }
 
 export interface CameraState {
@@ -85,4 +95,22 @@ export interface ViewConfig {
   cameraPosition: Vector3D;
   cameraRotation: Vector3D;
   upVector: Vector3D;
+}
+
+// Hierarchical assembly types
+export type HierarchyNode = Assembly | DraftObject;
+
+export interface WorldTransform {
+  position: Vector3D;
+  rotation: Vector3D;
+  scale?: Vector3D;  // Future-proofing for scaling support
+}
+
+export interface TreeNode {
+  id: string;
+  type: 'assembly' | 'object';
+  name: string;
+  children: TreeNode[];
+  depth: number;
+  isExpanded?: boolean;
 }

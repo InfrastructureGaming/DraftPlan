@@ -17,7 +17,7 @@ export function Canvas() {
   const gridRef = useRef<THREE.Group | null>(null);
   const objectMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
-  const { camera, objects, addObject, updateObject, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
+  const { camera, objects, assemblies, addObject, updateObject, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
   const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
@@ -427,8 +427,13 @@ export function Canvas() {
       const isSelected = selectedObjectIds.includes(obj.id);
       const isPreviewSelected = previewSelectedIds.includes(obj.id);
 
+      // Check if object belongs to a hidden assembly
+      const assembly = obj.assemblyId ? assemblies.find((a) => a.id === obj.assemblyId) : null;
+      const isVisible = !assembly || assembly.visible;
+
       if (!currentMeshes.has(obj.id)) {
         const mesh = createObjectMesh(obj, isSelected);
+        mesh.visible = isVisible;
         currentMeshes.set(obj.id, mesh);
         scene.add(mesh);
       } else {
@@ -447,11 +452,14 @@ export function Canvas() {
           (obj.rotation.z * Math.PI) / 180
         );
 
+        // Update visibility based on assembly
+        mesh.visible = isVisible;
+
         // Update selection highlight (selected takes priority over preview)
         updateMeshSelection(mesh, isSelected, isPreviewSelected);
       }
     });
-  }, [objects, selectedObjectIds, previewSelectedIds]);
+  }, [objects, selectedObjectIds, previewSelectedIds, assemblies]);
 
   // Handle drop
   const handleDrop = (e: React.DragEvent) => {
