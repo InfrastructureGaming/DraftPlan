@@ -8,7 +8,7 @@ import { ViewType, DraftObject, LumberLibraryItem } from '@/types';
 import { CanvasControls } from './CanvasControls';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
-import { computeWorldTransform, isNodeVisible, getEffectiveColor } from '@/lib/hierarchy/transforms';
+import { computeWorldTransform, isNodeVisible, getEffectiveColor, worldToLocalPosition } from '@/lib/hierarchy/transforms';
 
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,7 +18,7 @@ export function Canvas() {
   const gridRef = useRef<THREE.Group | null>(null);
   const objectMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
-  const { camera, objects, assemblies, addObject, updateObject, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
+  const { camera, objects, assemblies, addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
   const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
@@ -389,18 +389,21 @@ export function Canvas() {
             const obj = objects.find((o) => o.id === id);
             if (!obj) return;
 
-            let newPos = {
-              x: obj.position.x + deltaX,
-              y: obj.position.y + deltaY,
-              z: obj.position.z + deltaZ,
+            // Get current world position
+            const worldTransform = computeWorldTransform(id, objects, assemblies);
+
+            let newWorldPos = {
+              x: worldTransform.position.x + deltaX,
+              y: worldTransform.position.y + deltaY,
+              z: worldTransform.position.z + deltaZ,
             };
 
             // Snap to grid if enabled (skip snapping with Shift for fine control)
             if (obj.gridSnap && !e.shiftKey) {
-              newPos = snapVectorToGrid(newPos, snapIncrement);
+              newWorldPos = snapVectorToGrid(newWorldPos, snapIncrement);
             }
 
-            updateObject(id, { position: newPos });
+            updateObjectPosition(id, newWorldPos);
           });
         }
       }
@@ -610,12 +613,14 @@ export function Canvas() {
 
         draggedObjectIdsRef.current = objectsToDrag;
 
-        // Store initial positions of all objects that might be dragged
+        // Store initial world positions of all objects that might be dragged
         const initialPositions = new Map<string, Vector3D>();
         objectsToDrag.forEach((id) => {
           const obj = objects.find((o) => o.id === id);
           if (obj) {
-            initialPositions.set(id, { ...obj.position });
+            // Store world position (not local position)
+            const worldTransform = computeWorldTransform(id, objects, assemblies);
+            initialPositions.set(id, { ...worldTransform.position });
           }
         });
         initialObjectPositionsRef.current = initialPositions;
@@ -681,6 +686,9 @@ export function Canvas() {
 
           // Find objects that intersect with the box
           objects.forEach((obj) => {
+            // Get world position from hierarchy
+            const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
+
             // Calculate object's bounding box in world space
             const halfWidth = obj.dimensions.width / 2;
             const halfHeight = obj.dimensions.height / 2;
@@ -688,14 +696,14 @@ export function Canvas() {
 
             // Get all 8 corners of the bounding box
             const corners = [
-              new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-              new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-              new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-              new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-              new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-              new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-              new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
-              new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
+              new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+              new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+              new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+              new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+              new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+              new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+              new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
+              new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
             ];
 
             // Project all corners to screen space
@@ -896,28 +904,30 @@ export function Canvas() {
         rect.height
       );
 
-      // Update all dragged objects from their initial positions
+      // Update all dragged objects from their initial world positions
       // Skip history tracking during drag (we already pushed at drag start)
       draggedObjectIdsRef.current.forEach((id) => {
-        const initialPos = initialObjectPositionsRef.current.get(id);
-        if (!initialPos) return;
+        const initialWorldPos = initialObjectPositionsRef.current.get(id);
+        if (!initialWorldPos) return;
 
         const obj = objects.find((o) => o.id === id);
         if (!obj) return;
 
-        // Calculate new position from initial position + world delta
-        let newPos = {
-          x: initialPos.x + worldDelta.x,
-          y: initialPos.y + worldDelta.y,
-          z: initialPos.z + worldDelta.z,
+        // Calculate new world position from initial world position + world delta
+        let newWorldPos = {
+          x: initialWorldPos.x + worldDelta.x,
+          y: initialWorldPos.y + worldDelta.y,
+          z: initialWorldPos.z + worldDelta.z,
         };
 
         // Snap to grid if enabled (using current snap increment)
         if (obj.gridSnap) {
-          newPos = snapVectorToGrid(newPos, snapIncrement);
+          newWorldPos = snapVectorToGrid(newWorldPos, snapIncrement);
         }
 
-        updateObject(id, { position: newPos }, true); // skipHistory = true
+        // Convert world position to local position and update
+        const newLocalPos = worldToLocalPosition(newWorldPos, obj.parentId, objects, assemblies);
+        updateObject(id, { localPosition: newLocalPos }, true); // skipHistory = true
       });
     };
 
@@ -926,7 +936,7 @@ export function Canvas() {
     return () => {
       document.removeEventListener('mousemove', handleGlobalDragMove);
     };
-  }, [isDragging, camera.currentView, objects, updateObject]);
+  }, [isDragging, camera.currentView, objects, assemblies, updateObject]);
 
   // Global mouse move handler for box selection
   useEffect(() => {
@@ -977,6 +987,9 @@ export function Canvas() {
     // Find objects that intersect with the box
     const previewIds: string[] = [];
     objects.forEach((obj) => {
+      // Get world position from hierarchy
+      const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
+
       // Calculate object's bounding box in world space
       const halfWidth = obj.dimensions.width / 2;
       const halfHeight = obj.dimensions.height / 2;
@@ -984,14 +997,14 @@ export function Canvas() {
 
       // Get all 8 corners of the bounding box
       const corners = [
-        new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-        new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-        new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-        new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-        new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-        new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-        new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
-        new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
+        new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+        new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+        new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+        new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+        new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+        new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+        new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
+        new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
       ];
 
       // Project all corners to screen space
@@ -1044,6 +1057,9 @@ export function Canvas() {
 
             // Find objects that intersect with the box
             objects.forEach((obj) => {
+              // Get world position from hierarchy
+              const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
+
               // Calculate object's bounding box in world space
               const halfWidth = obj.dimensions.width / 2;
               const halfHeight = obj.dimensions.height / 2;
@@ -1051,14 +1067,14 @@ export function Canvas() {
 
               // Get all 8 corners of the bounding box
               const corners = [
-                new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-                new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z - halfDepth),
-                new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-                new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z - halfDepth),
-                new THREE.Vector3(obj.position.x - halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-                new THREE.Vector3(obj.position.x + halfWidth, obj.position.y - halfHeight, obj.position.z + halfDepth),
-                new THREE.Vector3(obj.position.x - halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
-                new THREE.Vector3(obj.position.x + halfWidth, obj.position.y + halfHeight, obj.position.z + halfDepth),
+                new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+                new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z - halfDepth),
+                new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+                new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z - halfDepth),
+                new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+                new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y - halfHeight, worldTransform.position.z + halfDepth),
+                new THREE.Vector3(worldTransform.position.x - halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
+                new THREE.Vector3(worldTransform.position.x + halfWidth, worldTransform.position.y + halfHeight, worldTransform.position.z + halfDepth),
               ];
 
               // Project all corners to screen space
