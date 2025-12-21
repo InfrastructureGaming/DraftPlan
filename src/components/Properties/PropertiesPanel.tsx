@@ -2,7 +2,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 export function PropertiesPanel() {
-  const { objects, assemblies, selectedObjectIds, updateObject, updateObjectPosition } = useProjectStore();
+  const { objects, assemblies, selectedObjectIds, updateObject, updateObjectPosition, reparentNode } = useProjectStore();
 
   // Get the first selected object
   const selectedObject = selectedObjectIds.length > 0
@@ -70,6 +70,15 @@ export function PropertiesPanel() {
     }
   };
 
+  const handleParentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newParentId = e.target.value === '' ? undefined : e.target.value;
+    reparentNode(selectedObject.id, newParentId);
+  };
+
+  const handleUseAssemblyColorToggle = () => {
+    updateObject(selectedObject.id, { useAssemblyColor: !selectedObject.useAssemblyColor });
+  };
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
@@ -88,6 +97,39 @@ export function PropertiesPanel() {
             onChange={handleNameChange}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Hierarchy */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">Parent Assembly</label>
+          <select
+            value={selectedObject.parentId || ''}
+            onChange={handleParentChange}
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">None (Root Level)</option>
+            {assemblies.map((assembly) => (
+              <option key={assembly.id} value={assembly.id}>
+                {assembly.name}
+              </option>
+            ))}
+          </select>
+          {selectedObject.parentId && (
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-gray-500">
+                Position is relative to parent assembly
+              </p>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedObject.useAssemblyColor}
+                  onChange={handleUseAssemblyColorToggle}
+                  className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-700">Use parent assembly color</span>
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Position */}

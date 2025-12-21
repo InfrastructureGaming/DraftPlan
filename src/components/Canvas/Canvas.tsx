@@ -4,7 +4,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
 import { createOrthographicCamera, setupCameraForView } from '@/lib/three/views';
 import { screenToWorld, snapVectorToGrid, screenDeltaToWorldDelta } from '@/lib/geometry/coordinates';
-import { ViewType, DraftObject, LumberLibraryItem } from '@/types';
+import { ViewType, DraftObject, LumberLibraryItem, Assembly } from '@/types';
 import { CanvasControls } from './CanvasControls';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
