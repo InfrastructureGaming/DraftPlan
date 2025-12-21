@@ -12,7 +12,7 @@ interface TreeNodeProps {
 
 export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
   const { theme } = useUIStore();
-  const { objects, assemblies, toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion, reparentNode } = useProjectStore();
+  const { objects, assemblies, toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion, reparentNode, deleteNode } = useProjectStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -50,6 +50,22 @@ export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
     e.stopPropagation();
     if (type === 'assembly') {
       toggleAssemblyVisibility(id);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (type === 'assembly') {
+      const assemblyName = (item as Assembly).name;
+      const childCount = children.length;
+      const message = childCount > 0
+        ? `Delete assembly "${assemblyName}" and all ${childCount} children?`
+        : `Delete assembly "${assemblyName}"?`;
+
+      if (window.confirm(message)) {
+        deleteNode(id);
+      }
     }
   };
 
@@ -215,6 +231,17 @@ export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
               <span className="text-xs">
                 {item.visible ? '👁️' : '👁️‍🗨️'}
               </span>
+            </button>
+          )}
+
+          {/* Delete Button (assemblies only) */}
+          {type === 'assembly' && (
+            <button
+              onClick={handleDelete}
+              className={`flex-shrink-0 w-5 h-5 flex items-center justify-center rounded ${colors.hover} text-red-600 hover:text-red-700`}
+              title="Delete assembly"
+            >
+              <span className="text-xs">🗑️</span>
             </button>
           )}
 
