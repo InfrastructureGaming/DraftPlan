@@ -13,6 +13,7 @@ export function ViewOptionsMenu() {
     propertiesPanelOpen,
     controlsPanelOpen,
     assembliesPanelOpen,
+    projectDetailsPanelOpen,
     theme,
     toggleGrid,
     toggleRulers,
@@ -21,6 +22,7 @@ export function ViewOptionsMenu() {
     togglePropertiesPanel,
     toggleControlsPanel,
     toggleAssembliesPanel,
+    toggleProjectDetailsPanel,
     toggleCutListModal,
     setTheme,
   } = useUIStore();
@@ -108,6 +110,16 @@ export function ViewOptionsMenu() {
               <span>Library Panel</span>
               <span className="text-xs text-gray-500">
                 {libraryPanelOpen && '✓'}
+              </span>
+            </button>
+
+            <button
+              onClick={toggleProjectDetailsPanel}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-sm hover:bg-gray-100 rounded transition-colors"
+            >
+              <span>Project Details</span>
+              <span className="text-xs text-gray-500">
+                {projectDetailsPanelOpen && '✓'}
               </span>
             </button>
 

@@ -7,6 +7,7 @@ interface UIState extends ProjectSettings {
   propertiesPanelOpen: boolean;
   controlsPanelOpen: boolean;
   assembliesPanelOpen: boolean;
+  projectDetailsPanelOpen: boolean;
   cutListModalOpen: boolean;
   majorGridSize: number; // Size in inches for major grid lines
   minorGridVisible: boolean; // Toggle for 1/16" grid visibility
@@ -20,6 +21,7 @@ interface UIState extends ProjectSettings {
   togglePropertiesPanel: () => void;
   toggleControlsPanel: () => void;
   toggleAssembliesPanel: () => void;
+  toggleProjectDetailsPanel: () => void;
   toggleCutListModal: () => void;
   setMajorGridSize: (size: number) => void;
   toggleMinorGrid: () => void;
@@ -34,6 +36,7 @@ export const useUIStore = create<UIState>((set) => ({
   propertiesPanelOpen: true,
   controlsPanelOpen: true, // Default to visible
   assembliesPanelOpen: true, // Default to visible
+  projectDetailsPanelOpen: true, // Default to visible
   cutListModalOpen: false, // Default to closed
   majorGridSize: 1, // Default to 1 inch
   minorGridVisible: true, // Default to visible
@@ -50,6 +53,8 @@ export const useUIStore = create<UIState>((set) => ({
     set((state) => ({ controlsPanelOpen: !state.controlsPanelOpen })),
   toggleAssembliesPanel: () =>
     set((state) => ({ assembliesPanelOpen: !state.assembliesPanelOpen })),
+  toggleProjectDetailsPanel: () =>
+    set((state) => ({ projectDetailsPanelOpen: !state.projectDetailsPanelOpen })),
   toggleCutListModal: () =>
     set((state) => ({ cutListModalOpen: !state.cutListModalOpen })),
   setMajorGridSize: (size) => set({ majorGridSize: size }),

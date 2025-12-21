@@ -7,12 +7,13 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { LibraryPanel } from '@/components/Library/LibraryPanel';
 import { PropertiesPanel } from '@/components/Properties/PropertiesPanel';
 import { AssembliesPanel } from '@/components/Assemblies/AssembliesPanel';
+import { ProjectDetailsPanel } from '@/components/ProjectDetails/ProjectDetailsPanel';
 import { CutListModal } from '@/components/CutList/CutListModal';
 import { useUIStore } from '@/stores/uiStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export function MainLayout() {
-  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, cutListModalOpen, theme } = useUIStore();
+  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, theme } = useUIStore();
 
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
@@ -40,10 +41,19 @@ export function MainLayout() {
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel (Library) */}
-        {libraryPanelOpen && (
-          <div className={`w-64 ${colors.panelBg} border-r ${colors.border}`}>
-            <LibraryPanel />
+        {/* Left Panel (Library + Project Details) */}
+        {(libraryPanelOpen || projectDetailsPanelOpen) && (
+          <div className={`w-64 ${colors.panelBg} border-r ${colors.border} flex flex-col`}>
+            {libraryPanelOpen && (
+              <div className="flex-1 overflow-hidden">
+                <LibraryPanel />
+              </div>
+            )}
+            {projectDetailsPanelOpen && (
+              <div className={`flex-1 overflow-hidden ${libraryPanelOpen ? `border-t ${colors.border}` : ''}`}>
+                <ProjectDetailsPanel />
+              </div>
+            )}
           </div>
         )}
 
