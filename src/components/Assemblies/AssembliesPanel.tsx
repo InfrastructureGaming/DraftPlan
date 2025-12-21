@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
-import { AssemblyItem } from './AssemblyItem';
+import { TreeNode } from './TreeNode';
 import { CreateAssemblyModal } from './CreateAssemblyModal';
 
 export function AssembliesPanel() {
-  const { assemblies, selectedObjectIds, reorderAssemblies } = useProjectStore();
+  const { objects, assemblies, selectedObjectIds, selectObject } = useProjectStore();
   const { theme } = useUIStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Theme-based colors
   const colors = {
@@ -24,31 +22,21 @@ export function AssembliesPanel() {
 
   const canCreateAssembly = selectedObjectIds.length >= 2;
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
+  // Get root-level items (assemblies and objects without a parent)
+  const rootAssemblies = assemblies.filter((a) => !a.parentId);
+  const rootObjects = objects.filter((o) => !o.parentId);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    setDragOverIndex(index);
-  };
+  // Combine and sort root items (assemblies first, then objects)
+  const rootItems = [
+    ...rootAssemblies.map((a) => ({ id: a.id, type: 'assembly' as const, name: a.name })),
+    ...rootObjects.map((o) => ({ id: o.id, type: 'object' as const, name: o.name })),
+  ];
 
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      reorderAssemblies(draggedIndex, dropIndex);
+  // Handle object selection
+  const handleSelectNode = (id: string, type: 'assembly' | 'object') => {
+    if (type === 'object') {
+      selectObject(id);
     }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDragOverIndex(null);
   };
 
   return (
@@ -92,9 +80,9 @@ export function AssembliesPanel() {
             )}
           </div>
 
-          {/* Assembly List */}
+          {/* Hierarchy Tree */}
           <div className="flex-1 overflow-y-auto">
-            {assemblies.length === 0 ? (
+            {rootItems.length === 0 ? (
               <div className={`p-8 text-center ${colors.textMuted}`}>
                 <p className="text-sm">No assemblies yet</p>
                 <p className="text-xs mt-2">
@@ -103,23 +91,14 @@ export function AssembliesPanel() {
               </div>
             ) : (
               <div>
-                {assemblies.map((assembly, index) => (
-                  <div
-                    key={assembly.id}
-                    draggable
-                    onDragStart={() => handleDragStart(index)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, index)}
-                    onDragEnd={handleDragEnd}
-                    className={`${
-                      dragOverIndex === index && draggedIndex !== index
-                        ? 'border-t-2 border-blue-500'
-                        : ''
-                    } ${draggedIndex === index ? 'opacity-50' : ''}`}
-                  >
-                    <AssemblyItem assembly={assembly} />
-                  </div>
+                {rootItems.map((item) => (
+                  <TreeNode
+                    key={item.id}
+                    id={item.id}
+                    type={item.type}
+                    depth={0}
+                    onSelect={handleSelectNode}
+                  />
                 ))}
               </div>
             )}
@@ -127,7 +106,7 @@ export function AssembliesPanel() {
 
           {/* Footer Info */}
           <div className={`p-2 border-t ${colors.border} text-xs ${colors.textMuted}`}>
-            {assemblies.length} {assemblies.length === 1 ? 'assembly' : 'assemblies'}
+            {assemblies.length} {assemblies.length === 1 ? 'assembly' : 'assemblies'} • {objects.length} {objects.length === 1 ? 'object' : 'objects'}
           </div>
         </>
       )}
