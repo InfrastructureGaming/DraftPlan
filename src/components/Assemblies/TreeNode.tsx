@@ -12,7 +12,9 @@ interface TreeNodeProps {
 
 export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
   const { theme } = useUIStore();
-  const { objects, assemblies, toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion } = useProjectStore();
+  const { objects, assemblies, toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion, reparentNode } = useProjectStore();
+
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Get the item (assembly or object)
   const item = type === 'assembly'
@@ -60,6 +62,78 @@ export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
     }
   };
 
+  // Check if a node is a descendant of another (to prevent circular dependencies)
+  const isDescendantOf = (nodeId: string, potentialAncestorId: string): boolean => {
+    const node = assemblies.find((a) => a.id === nodeId) || objects.find((o) => o.id === nodeId);
+    if (!node || !node.parentId) return false;
+    if (node.parentId === potentialAncestorId) return true;
+    return isDescendantOf(node.parentId, potentialAncestorId);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/json', JSON.stringify({ id, type }));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Only allow dropping on assemblies
+    if (type !== 'assembly') {
+      return;
+    }
+
+    // Get dragged item
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
+      const draggedId = dragData.id;
+
+      // Prevent dropping on self or descendants
+      if (draggedId === id || isDescendantOf(id, draggedId)) {
+        return;
+      }
+
+      e.dataTransfer.dropEffect = 'move';
+      setIsDragOver(true);
+    } catch {
+      // Invalid drag data, ignore
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    // Only allow dropping on assemblies
+    if (type !== 'assembly') {
+      return;
+    }
+
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
+      const draggedId = dragData.id;
+
+      // Prevent dropping on self or descendants
+      if (draggedId === id || isDescendantOf(id, draggedId)) {
+        return;
+      }
+
+      // Reparent the dragged node to this assembly
+      reparentNode(draggedId, id);
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
+
   // Get color for the item
   const getItemColor = () => {
     if (type === 'assembly' && 'color' in item) {
@@ -101,7 +175,14 @@ export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
     <div>
       {/* Node Item */}
       <div
-        className={`border-b ${colors.border} ${colors.hover} transition-colors cursor-pointer`}
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`border-b ${colors.border} ${colors.hover} transition-colors cursor-pointer ${
+          isDragOver && type === 'assembly' ? 'bg-blue-500 bg-opacity-20 border-blue-500 border-2' : ''
+        }`}
         onClick={handleClick}
         style={{ paddingLeft: `${indentPx}px` }}
       >

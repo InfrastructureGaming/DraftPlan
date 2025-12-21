@@ -5,10 +5,11 @@ import { TreeNode } from './TreeNode';
 import { CreateAssemblyModal } from './CreateAssemblyModal';
 
 export function AssembliesPanel() {
-  const { objects, assemblies, selectedObjectIds, selectObject } = useProjectStore();
+  const { objects, assemblies, selectedObjectIds, selectObject, reparentNode } = useProjectStore();
   const { theme } = useUIStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDragOverRoot, setIsDragOverRoot] = useState(false);
 
   // Theme-based colors
   const colors = {
@@ -36,6 +37,32 @@ export function AssembliesPanel() {
   const handleSelectNode = (id: string, type: 'assembly' | 'object') => {
     if (type === 'object') {
       selectObject(id);
+    }
+  };
+
+  // Handle drag-to-root (remove parent)
+  const handleRootDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOverRoot(true);
+  };
+
+  const handleRootDragLeave = () => {
+    setIsDragOverRoot(false);
+  };
+
+  const handleRootDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOverRoot(false);
+
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
+      const draggedId = dragData.id;
+
+      // Reparent to root (no parent)
+      reparentNode(draggedId, undefined);
+    } catch (error) {
+      console.error('Error handling drop:', error);
     }
   };
 
@@ -81,7 +108,21 @@ export function AssembliesPanel() {
           </div>
 
           {/* Hierarchy Tree */}
-          <div className="flex-1 overflow-y-auto">
+          <div
+            className="flex-1 overflow-y-auto relative"
+            onDragOver={handleRootDragOver}
+            onDragLeave={handleRootDragLeave}
+            onDrop={handleRootDrop}
+          >
+            {/* Drop zone indicator */}
+            {isDragOverRoot && (
+              <div className="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-blue-500 border-dashed pointer-events-none flex items-center justify-center z-10">
+                <div className={`text-sm font-semibold ${colors.text} bg-blue-500 bg-opacity-90 px-4 py-2 rounded`}>
+                  Drop here to move to root level
+                </div>
+              </div>
+            )}
+
             {rootItems.length === 0 ? (
               <div className={`p-8 text-center ${colors.textMuted}`}>
                 <p className="text-sm">No assemblies yet</p>
