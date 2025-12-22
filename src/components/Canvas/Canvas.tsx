@@ -1132,7 +1132,7 @@ export function Canvas() {
 
       if (exportPNGRequested) {
         const { projectInfo } = useProjectStore.getState();
-        exportCurrentViewAsPNG(rendererRef.current, projectInfo.name, camera.currentView);
+        await exportCurrentViewAsPNG(rendererRef.current, projectInfo.name, camera.currentView, setView);
         clearExportRequests();
       }
 

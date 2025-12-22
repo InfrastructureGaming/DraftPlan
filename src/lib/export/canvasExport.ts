@@ -30,7 +30,10 @@ export async function captureView(
   // Switch to the desired view
   if (currentView !== viewType) {
     setView(viewType);
-    // Wait for view to update and render
+    // Wait for view to update and render - increased delay for reliable rendering
+    await new Promise(resolve => setTimeout(resolve, 300));
+  } else {
+    // Even if we're already on the right view, wait a bit to ensure rendering is complete
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
@@ -43,12 +46,14 @@ export async function captureView(
 /**
  * Export current view as PNG
  */
-export function exportCurrentViewAsPNG(
+export async function exportCurrentViewAsPNG(
   renderer: THREE.WebGLRenderer,
   projectName: string,
-  currentView: ViewType
-): void {
-  const dataURL = captureCanvasAsDataURL(renderer);
+  currentView: ViewType,
+  setView: (view: ViewType) => void
+): Promise<void> {
+  // Capture the current view with proper rendering delay
+  const { dataURL } = await captureView(renderer, currentView, setView, currentView);
   const filename = `${projectName}_${currentView}.png`;
   downloadPNG(dataURL, filename);
 }

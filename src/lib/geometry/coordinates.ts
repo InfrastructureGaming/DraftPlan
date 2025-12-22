@@ -51,6 +51,23 @@ export function screenToWorld(
       // Right view: screen X/Y map to world -Z/Y, X is fixed at 0
       return { x: 0, y: vector.y, z: -vector.x };
 
+    case 'iso-front-right':
+      // Isometric front-right: screen-right is diagonal (X+Z), screen-up is Y
+      // Screen X maps to diagonal (X+Z), screen Y maps to Y
+      return { x: vector.x * 0.707, y: vector.y, z: vector.x * 0.707 };
+
+    case 'iso-front-left':
+      // Isometric front-left: screen-right is diagonal (-X+Z), screen-up is Y
+      return { x: -vector.x * 0.707, y: vector.y, z: vector.x * 0.707 };
+
+    case 'iso-back-right':
+      // Isometric back-right: screen-right is diagonal (X-Z), screen-up is Y
+      return { x: vector.x * 0.707, y: vector.y, z: -vector.x * 0.707 };
+
+    case 'iso-back-left':
+      // Isometric back-left: screen-right is diagonal (-X-Z), screen-up is Y
+      return { x: -vector.x * 0.707, y: vector.y, z: -vector.x * 0.707 };
+
     default:
       return { x: vector.x, y: vector.y, z: 0 };
   }
@@ -123,6 +140,22 @@ export function screenDeltaToWorldDelta(
     case 'right':
       // Right view: X/Y movement in screen maps to -Z/Y in world
       return { x: 0, y: worldDeltaY, z: -worldDeltaX };
+
+    case 'iso-front-right':
+      // Isometric front-right: screen-right is diagonal (X+Z), screen-up is Y
+      return { x: worldDeltaX * 0.707, y: worldDeltaY, z: worldDeltaX * 0.707 };
+
+    case 'iso-front-left':
+      // Isometric front-left: screen-right is diagonal (-X+Z), screen-up is Y
+      return { x: -worldDeltaX * 0.707, y: worldDeltaY, z: worldDeltaX * 0.707 };
+
+    case 'iso-back-right':
+      // Isometric back-right: screen-right is diagonal (X-Z), screen-up is Y
+      return { x: worldDeltaX * 0.707, y: worldDeltaY, z: -worldDeltaX * 0.707 };
+
+    case 'iso-back-left':
+      // Isometric back-left: screen-right is diagonal (-X-Z), screen-up is Y
+      return { x: -worldDeltaX * 0.707, y: worldDeltaY, z: -worldDeltaX * 0.707 };
 
     default:
       return { x: worldDeltaX, y: worldDeltaY, z: 0 };

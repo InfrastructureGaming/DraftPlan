@@ -10,7 +10,9 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
   const { camera } = useProjectStore();
   const { rulersVisible, theme, gridVisible, majorGridSize, minorGridVisible } = useUIStore();
 
-  if (!rulersVisible) return null;
+  // Don't show rulers if disabled or if in isometric view (rulers not accurate in diagonal views)
+  const isIsometricView = camera.currentView.startsWith('iso-');
+  if (!rulersVisible || isIsometricView) return null;
 
   const RULER_SIZE = 36; // Height of horizontal ruler, width of vertical ruler (in pixels)
   const { zoom, panOffset } = camera;
