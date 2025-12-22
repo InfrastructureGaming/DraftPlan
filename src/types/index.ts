@@ -1,6 +1,8 @@
 // Core Types for DraftPlan
 
-export type ViewType = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
+export type ViewType =
+  | 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom'
+  | 'iso-front-right' | 'iso-front-left' | 'iso-back-right' | 'iso-back-left';
 
 export interface Vector3D {
   x: number;

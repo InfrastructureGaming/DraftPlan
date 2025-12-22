@@ -51,6 +51,30 @@ export const VIEW_CONFIGS: Record<ViewType, ViewConfig> = {
     cameraRotation: { x: Math.PI / 2, y: 0, z: 0 },
     upVector: { x: 0, y: 0, z: 1 },
   },
+  'iso-front-right': {
+    name: 'iso-front-right',
+    cameraPosition: { x: 70, y: 70, z: 70 },
+    cameraRotation: { x: -Math.PI / 4, y: Math.PI / 4, z: 0 },
+    upVector: { x: 0, y: 1, z: 0 },
+  },
+  'iso-front-left': {
+    name: 'iso-front-left',
+    cameraPosition: { x: -70, y: 70, z: 70 },
+    cameraRotation: { x: -Math.PI / 4, y: -Math.PI / 4, z: 0 },
+    upVector: { x: 0, y: 1, z: 0 },
+  },
+  'iso-back-right': {
+    name: 'iso-back-right',
+    cameraPosition: { x: 70, y: 70, z: -70 },
+    cameraRotation: { x: -Math.PI / 4, y: (3 * Math.PI) / 4, z: 0 },
+    upVector: { x: 0, y: 1, z: 0 },
+  },
+  'iso-back-left': {
+    name: 'iso-back-left',
+    cameraPosition: { x: -70, y: 70, z: -70 },
+    cameraRotation: { x: -Math.PI / 4, y: (-3 * Math.PI) / 4, z: 0 },
+    upVector: { x: 0, y: 1, z: 0 },
+  },
 };
 
 /**
@@ -101,6 +125,30 @@ export function setupCameraForView(
       // Looking down +Y, X is right, -Z is down (screen up)
       offsetX = panOffset.x;
       offsetZ = panOffset.y;
+      break;
+    case 'iso-front-right':
+      // Looking from front-right corner (X+, Z+), screen-right is diagonal
+      offsetX = panOffset.x * 0.707 - panOffset.y * 0.0; // X component
+      offsetY = panOffset.y * 0.707;                     // Y component
+      offsetZ = panOffset.x * 0.707;                     // Z component
+      break;
+    case 'iso-front-left':
+      // Looking from front-left corner (X-, Z+)
+      offsetX = -panOffset.x * 0.707;
+      offsetY = panOffset.y * 0.707;
+      offsetZ = panOffset.x * 0.707;
+      break;
+    case 'iso-back-right':
+      // Looking from back-right corner (X+, Z-)
+      offsetX = panOffset.x * 0.707;
+      offsetY = panOffset.y * 0.707;
+      offsetZ = -panOffset.x * 0.707;
+      break;
+    case 'iso-back-left':
+      // Looking from back-left corner (X-, Z-)
+      offsetX = -panOffset.x * 0.707;
+      offsetY = panOffset.y * 0.707;
+      offsetZ = -panOffset.x * 0.707;
       break;
   }
 

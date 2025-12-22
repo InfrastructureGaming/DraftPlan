@@ -39,11 +39,19 @@ export function ViewCube() {
     textY: cubeSize / 2 + 20,
   };
 
+  // Define corner vertices for isometric view buttons
+  const corners = [
+    { x: cubeSize / 2, y: 10, view: 'iso-back-left' as ViewType },           // Top vertex
+    { x: cubeSize - 5, y: cubeSize / 2 - 10, view: 'iso-front-right' as ViewType }, // Right vertex
+    { x: 5, y: cubeSize / 2 - 10, view: 'iso-front-left' as ViewType },      // Left vertex
+  ];
+
   // Define other views accessible via buttons below the cube
   const otherViews: { label: string; view: ViewType }[] = [
     { label: 'Back', view: 'back' },
     { label: 'Left', view: 'left' },
     { label: 'Bottom', view: 'bottom' },
+    { label: 'ISO-BR', view: 'iso-back-right' },
   ];
 
   const handleViewClick = (view: ViewType) => {
@@ -66,6 +74,10 @@ export function ViewCube() {
 
   // Get display name for current view
   const getViewDisplayName = (view: ViewType): string => {
+    if (view.startsWith('iso-')) {
+      const parts = view.replace('iso-', '').split('-');
+      return 'Iso ' + parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('-');
+    }
     return view.charAt(0).toUpperCase() + view.slice(1);
   };
 
@@ -136,6 +148,27 @@ export function ViewCube() {
             e.currentTarget.style.fill = getFaceColor(rightFace.view);
           }}
         />
+
+        {/* Corner buttons for isometric views */}
+        {corners.map((corner) => (
+          <circle
+            key={corner.view}
+            cx={corner.x}
+            cy={corner.y}
+            r={6}
+            fill={currentView === corner.view ? '#3B82F6' : '#9CA3AF'}
+            stroke="#374151"
+            strokeWidth="1.5"
+            className="cursor-pointer transition-colors"
+            onClick={() => handleViewClick(corner.view)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.fill = currentView === corner.view ? '#2563EB' : '#6B7280';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.fill = currentView === corner.view ? '#3B82F6' : '#9CA3AF';
+            }}
+          />
+        ))}
       </svg>
 
       {/* Current View Label */}
