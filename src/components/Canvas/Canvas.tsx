@@ -6,6 +6,7 @@ import { createOrthographicCamera, setupCameraForView } from '@/lib/three/views'
 import { screenToWorld, snapVectorToGrid, screenDeltaToWorldDelta } from '@/lib/geometry/coordinates';
 import { ViewType, DraftObject, LumberLibraryItem, Assembly } from '@/types';
 import { CanvasControls } from './CanvasControls';
+import { ViewCube } from '../Layout/ViewCube';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
 import { computeWorldTransform, isNodeVisible, getEffectiveColor, worldToLocalPosition } from '@/lib/hierarchy/transforms';
@@ -1176,6 +1177,11 @@ export function Canvas() {
           canvasHeight={canvasDimensions.height}
         />
       )}
+
+      {/* View Cube */}
+      <div className="absolute top-4 right-[320px] z-10">
+        <ViewCube />
+      </div>
 
       {/* Canvas Controls */}
       {controlsPanelOpen && (

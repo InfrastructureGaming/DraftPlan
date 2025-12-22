@@ -62,8 +62,13 @@ export function ViewCube() {
     return '#6B7280'; // Darker gray
   };
 
+  // Get display name for current view
+  const getViewDisplayName = (view: ViewType): string => {
+    return view.charAt(0).toUpperCase() + view.slice(1);
+  };
+
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1">
       {/* Isometric Cube */}
       <svg width={cubeSize} height={cubeSize + 30} className="cursor-pointer">
         {/* Top Face */}
@@ -84,18 +89,6 @@ export function ViewCube() {
             e.currentTarget.style.fill = getFaceColor(topFace.view);
           }}
         />
-        <text
-          x={topFace.textX}
-          y={topFace.textY}
-          textAnchor="middle"
-          fill="white"
-          fontSize="11"
-          fontWeight="600"
-          pointerEvents="none"
-          fontFamily="system-ui, -apple-system, sans-serif"
-        >
-          {topFace.label}
-        </text>
 
         {/* Front Face */}
         <polygon
@@ -115,18 +108,6 @@ export function ViewCube() {
             e.currentTarget.style.fill = getFaceColor(frontFace.view);
           }}
         />
-        <text
-          x={frontFace.textX}
-          y={frontFace.textY}
-          textAnchor="middle"
-          fill="white"
-          fontSize="10"
-          fontWeight="600"
-          pointerEvents="none"
-          fontFamily="system-ui, -apple-system, sans-serif"
-        >
-          {frontFace.label}
-        </text>
 
         {/* Right Face */}
         <polygon
@@ -146,22 +127,15 @@ export function ViewCube() {
             e.currentTarget.style.fill = getFaceColor(rightFace.view);
           }}
         />
-        <text
-          x={rightFace.textX}
-          y={rightFace.textY}
-          textAnchor="middle"
-          fill="white"
-          fontSize="10"
-          fontWeight="600"
-          pointerEvents="none"
-          fontFamily="system-ui, -apple-system, sans-serif"
-        >
-          {rightFace.label}
-        </text>
       </svg>
 
+      {/* Current View Label */}
+      <div className="text-xs font-semibold text-gray-700 bg-white px-2 py-0.5 rounded shadow-sm">
+        {getViewDisplayName(currentView)}
+      </div>
+
       {/* Additional View Buttons */}
-      <div className="flex gap-1">
+      <div className="flex gap-1 mt-0.5">
         {otherViews.map((view) => (
           <button
             key={view.view}

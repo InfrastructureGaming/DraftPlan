@@ -1,5 +1,4 @@
 import { Canvas } from '@/components/Canvas/Canvas';
-import { ViewCube } from './ViewCube';
 import { AlignmentToolbar } from './AlignmentToolbar';
 import { AppMenu } from './AppMenu';
 import { ViewOptionsMenu } from './ViewOptionsMenu';
@@ -31,12 +30,11 @@ export function MainLayout() {
   return (
     <div className={`h-screen w-screen flex flex-col ${colors.bg}`}>
       {/* Toolbar */}
-      <div className={`h-32 ${colors.toolbarBg} border-b ${colors.border} flex items-center px-4 gap-4 shadow-sm`}>
+      <div className={`h-12 ${colors.toolbarBg} border-b ${colors.border} flex items-center px-4 gap-4 shadow-sm`}>
         <AppMenu />
         <ViewOptionsMenu />
         <div className="flex-1" />
         <AlignmentToolbar />
-        <ViewCube />
       </div>
 
       {/* Main content area */}
