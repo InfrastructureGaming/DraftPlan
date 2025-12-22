@@ -1,8 +1,10 @@
 import { useProjectStore } from '@/stores/projectStore';
+import { useUIStore } from '@/stores/uiStore';
 import { ViewType } from '@/types';
 
 export function ViewCube() {
   const { camera, setView } = useProjectStore();
+  const { theme } = useUIStore();
   const currentView = camera.currentView;
 
   // Define isometric cube geometry (showing Top, Front, Right faces)
@@ -67,8 +69,15 @@ export function ViewCube() {
     return view.charAt(0).toUpperCase() + view.slice(1);
   };
 
+  // Theme-based colors (matching CanvasControls)
+  const colors = {
+    bg: theme === 'dark' ? 'bg-[#2a2a2a]' : theme === 'blueprint' ? 'bg-[#1E3A8A]' : 'bg-white',
+    border: theme === 'dark' ? 'border-[#333333]' : theme === 'blueprint' ? 'border-[#1E3A8A]' : 'border-gray-200',
+    text: theme === 'dark' ? 'text-white' : theme === 'blueprint' ? 'text-white' : 'text-gray-700',
+  };
+
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className={`${colors.bg} rounded-lg shadow-lg border ${colors.border} p-3 flex flex-col items-center gap-1`}>
       {/* Isometric Cube */}
       <svg width={cubeSize} height={cubeSize + 30} className="cursor-pointer">
         {/* Top Face */}
@@ -130,7 +139,7 @@ export function ViewCube() {
       </svg>
 
       {/* Current View Label */}
-      <div className="text-xs font-semibold text-gray-700 bg-white px-2 py-0.5 rounded shadow-sm">
+      <div className={`text-xs font-semibold ${colors.text} px-2 py-0.5 rounded`}>
         {getViewDisplayName(currentView)}
       </div>
 
