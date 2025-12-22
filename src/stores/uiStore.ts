@@ -13,6 +13,10 @@ interface UIState extends ProjectSettings {
   minorGridVisible: boolean; // Toggle for 1/16" grid visibility
   snapIncrement: number; // Snap increment in inches for arrow key movement
 
+  // Export state
+  exportPNGRequested: boolean;
+  exportPDFRequested: boolean;
+
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'blueprint') => void;
   toggleGrid: () => void;
@@ -26,6 +30,9 @@ interface UIState extends ProjectSettings {
   setMajorGridSize: (size: number) => void;
   toggleMinorGrid: () => void;
   setSnapIncrement: (increment: number) => void;
+  requestExportPNG: () => void;
+  requestExportPDF: () => void;
+  clearExportRequests: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -41,6 +48,8 @@ export const useUIStore = create<UIState>((set) => ({
   majorGridSize: 1, // Default to 1 inch
   minorGridVisible: true, // Default to visible
   snapIncrement: 1, // Default to 1 inch
+  exportPNGRequested: false,
+  exportPDFRequested: false,
 
   setTheme: (theme) => set({ theme }),
   toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),
@@ -60,4 +69,7 @@ export const useUIStore = create<UIState>((set) => ({
   setMajorGridSize: (size) => set({ majorGridSize: size }),
   toggleMinorGrid: () => set((state) => ({ minorGridVisible: !state.minorGridVisible })),
   setSnapIncrement: (increment) => set({ snapIncrement: increment }),
+  requestExportPNG: () => set({ exportPNGRequested: true }),
+  requestExportPDF: () => set({ exportPDFRequested: true }),
+  clearExportRequests: () => set({ exportPNGRequested: false, exportPDFRequested: false }),
 }));

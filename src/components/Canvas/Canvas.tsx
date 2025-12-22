@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useProjectStore } from '@/stores/projectStore';
+import { exportCurrentViewAsPNG, exportMultiViewPDF } from '@/lib/export/canvasExport';
 import { useUIStore } from '@/stores/uiStore';
 import { createOrthographicCamera, setupCameraForView } from '@/lib/three/views';
 import { screenToWorld, snapVectorToGrid, screenDeltaToWorldDelta } from '@/lib/geometry/coordinates';
@@ -20,7 +21,7 @@ export function Canvas() {
   const objectMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
   const { camera, objects, assemblies, addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
-  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement } = useUIStore();
+  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -1123,6 +1124,32 @@ export function Canvas() {
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, [isBoxSelecting, selectionBox, objects, clearSelection, selectObject]);
+
+  // Handle export requests
+  useEffect(() => {
+    const handleExports = async () => {
+      if (!rendererRef.current) return;
+
+      if (exportPNGRequested) {
+        const { projectInfo } = useProjectStore.getState();
+        exportCurrentViewAsPNG(rendererRef.current, projectInfo.name, camera.currentView);
+        clearExportRequests();
+      }
+
+      if (exportPDFRequested) {
+        const { projectInfo } = useProjectStore.getState();
+        await exportMultiViewPDF(
+          rendererRef.current,
+          setView,
+          camera.currentView,
+          projectInfo
+        );
+        clearExportRequests();
+      }
+    };
+
+    handleExports();
+  }, [exportPNGRequested, exportPDFRequested, clearExportRequests, setView, camera.currentView]);
 
   return (
     <div
