@@ -12,7 +12,7 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
 
   if (!rulersVisible) return null;
 
-  const RULER_SIZE = 24; // Height of horizontal ruler, width of vertical ruler (in pixels)
+  const RULER_SIZE = 36; // Height of horizontal ruler, width of vertical ruler (in pixels)
   const { zoom, panOffset } = camera;
 
   // Calculate the visible world space range
@@ -65,7 +65,7 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
       <line
         key={`h-${x}`}
         x1={screenX}
-        y1={RULER_SIZE - 12}
+        y1={RULER_SIZE - 16}
         x2={screenX}
         y2={RULER_SIZE}
         stroke={rulerTick}
@@ -79,7 +79,7 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
       <text
         key={`h-label-${x}`}
         x={screenX}
-        y={RULER_SIZE - 14}
+        y={RULER_SIZE - 20}
         fill={rulerText}
         fontSize="12"
         fontWeight="bold"
@@ -103,7 +103,7 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
     verticalTicks.push(
       <line
         key={`v-${y}`}
-        x1={RULER_SIZE - 12}
+        x1={RULER_SIZE - 16}
         y1={screenY}
         x2={RULER_SIZE}
         y2={screenY}
@@ -117,7 +117,7 @@ export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
     verticalTicks.push(
       <text
         key={`v-label-${y}`}
-        x={RULER_SIZE - 15}
+        x={RULER_SIZE - 20}
         y={screenY + 4}
         fill={rulerText}
         fontSize="12"
