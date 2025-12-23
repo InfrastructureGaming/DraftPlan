@@ -127,31 +127,35 @@ export function setupCameraForView(
       offsetZ = panOffset.y;
       break;
     case 'iso-front-right':
-      // Looking from front-right corner (X+, Z+)
-      // Screen-right is diagonal (X+Z), screen-up is Y
-      offsetX = panOffset.x * 0.707;
-      offsetY = panOffset.y;           // Screen-up maps directly to Y
+      // Camera at (70, 70, 70), forward=(-1,-1,-1), up=(0,1,0)
+      // Camera right vector: up × forward = (-1, 0, 1) normalized = (-0.707, 0, 0.707)
+      // Screen-right moves camera in -X, +Z direction
+      offsetX = -panOffset.x * 0.707;
+      offsetY = panOffset.y;
       offsetZ = panOffset.x * 0.707;
       break;
     case 'iso-front-left':
-      // Looking from front-left corner (X-, Z+)
-      // Screen-right is diagonal (-X+Z), screen-up is Y
+      // Camera at (-70, 70, 70), forward=(1,-1,-1), up=(0,1,0)
+      // Camera right vector: up × forward = (-1, 0, -1) normalized = (-0.707, 0, -0.707)
+      // Screen-right moves camera in -X, -Z direction
       offsetX = -panOffset.x * 0.707;
-      offsetY = panOffset.y;           // Screen-up maps directly to Y
-      offsetZ = panOffset.x * 0.707;
-      break;
-    case 'iso-back-right':
-      // Looking from back-right corner (X+, Z-)
-      // Screen-right is diagonal (X-Z), screen-up is Y
-      offsetX = panOffset.x * 0.707;
-      offsetY = panOffset.y;           // Screen-up maps directly to Y
+      offsetY = panOffset.y;
       offsetZ = -panOffset.x * 0.707;
       break;
+    case 'iso-back-right':
+      // Camera at (70, 70, -70), forward=(-1,-1,1), up=(0,1,0)
+      // Camera right vector: up × forward = (1, 0, 1) normalized = (0.707, 0, 0.707)
+      // Screen-right moves camera in +X, +Z direction
+      offsetX = panOffset.x * 0.707;
+      offsetY = panOffset.y;
+      offsetZ = panOffset.x * 0.707;
+      break;
     case 'iso-back-left':
-      // Looking from back-left corner (X-, Z-)
-      // Screen-right is diagonal (-X-Z), screen-up is Y
-      offsetX = -panOffset.x * 0.707;
-      offsetY = panOffset.y;           // Screen-up maps directly to Y
+      // Camera at (-70, 70, -70), forward=(1,-1,1), up=(0,1,0)
+      // Camera right vector: up × forward = (1, 0, -1) normalized = (0.707, 0, -0.707)
+      // Screen-right moves camera in +X, -Z direction
+      offsetX = panOffset.x * 0.707;
+      offsetY = panOffset.y;
       offsetZ = -panOffset.x * 0.707;
       break;
   }
