@@ -446,14 +446,51 @@ export function Canvas() {
         ? getEffectiveColor(obj.id, objects, assemblies)
         : null;
 
-      if (!currentMeshes.has(obj.id)) {
+      // Check if mesh needs to be recreated due to dimension changes
+      const existingMesh = currentMeshes.get(obj.id);
+      const needsRecreate = existingMesh && (
+        existingMesh.userData.width !== obj.dimensions.width ||
+        existingMesh.userData.height !== obj.dimensions.height ||
+        existingMesh.userData.depth !== obj.dimensions.depth
+      );
+
+      if (!existingMesh || needsRecreate) {
+        // Remove old mesh if recreating
+        if (existingMesh) {
+          scene.remove(existingMesh);
+          existingMesh.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.geometry.dispose();
+              child.material.dispose();
+            }
+          });
+        }
+
+        // Create new mesh
         const mesh = createObjectMesh(obj, isSelected, effectiveColor);
         mesh.visible = isVisible;
+        mesh.userData.width = obj.dimensions.width;
+        mesh.userData.height = obj.dimensions.height;
+        mesh.userData.depth = obj.dimensions.depth;
+
+        // Set position and rotation immediately to avoid flicker
+        mesh.position.set(
+          worldTransform.position.x,
+          worldTransform.position.y,
+          worldTransform.position.z
+        );
+
+        mesh.rotation.set(
+          (worldTransform.rotation.x * Math.PI) / 180,
+          (worldTransform.rotation.y * Math.PI) / 180,
+          (worldTransform.rotation.z * Math.PI) / 180
+        );
+
         currentMeshes.set(obj.id, mesh);
         scene.add(mesh);
       } else {
         // Update existing mesh position, rotation, and selection state
-        const mesh = currentMeshes.get(obj.id)!;
+        const mesh = existingMesh;
 
         // Use world transform position (position represents object center)
         mesh.position.set(
