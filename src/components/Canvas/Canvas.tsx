@@ -455,11 +455,11 @@ export function Canvas() {
         // Update existing mesh position, rotation, and selection state
         const mesh = currentMeshes.get(obj.id)!;
 
-        // Use world transform position
+        // Use world transform position (position represents object center)
         mesh.position.set(
-          worldTransform.position.x + obj.dimensions.width / 2,
-          worldTransform.position.y + obj.dimensions.height / 2,
-          worldTransform.position.z + obj.dimensions.depth / 2
+          worldTransform.position.x,
+          worldTransform.position.y,
+          worldTransform.position.z
         );
 
         // Use world transform rotation (convert from degrees to radians)

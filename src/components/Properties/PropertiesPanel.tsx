@@ -64,6 +64,13 @@ export function PropertiesPanel() {
   const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: string) => {
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue > 0) {
+      // Calculate the change in dimension
+      const oldDimension = selectedObject.dimensions[dimension];
+      const dimensionDelta = numValue - oldDimension;
+
+      // Update dimensions without moving the object's center
+      // Since BoxGeometry is centered at origin, we don't need to adjust position
+      // The geometry will scale from center automatically
       updateObject(selectedObject.id, {
         dimensions: { ...selectedObject.dimensions, [dimension]: numValue },
       });

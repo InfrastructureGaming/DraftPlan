@@ -30,12 +30,12 @@ export function DimensionOverlay({
     // Get world position from hierarchy
     const worldTransform = computeWorldTransform(obj.id, objects, assemblies);
 
-    // Calculate object center in world space
-    const centerX = worldTransform.position.x + obj.dimensions.width / 2;
-    const centerY = worldTransform.position.y + obj.dimensions.height / 2;
-    const centerZ = worldTransform.position.z + obj.dimensions.depth / 2;
-
-    const worldPos = new THREE.Vector3(centerX, centerY, centerZ);
+    // Object position now represents the center in world space
+    const worldPos = new THREE.Vector3(
+      worldTransform.position.x,
+      worldTransform.position.y,
+      worldTransform.position.z
+    );
 
     // Project to screen space
     const screenPos = worldPos.clone().project(camera);
