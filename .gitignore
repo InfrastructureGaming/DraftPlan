@@ -35,3 +35,7 @@ out/
 *.dmg
 *.exe
 *.AppImage
+
+# Recovery files
+*.draftplan.tmp
+recovery.draftplan.tmp

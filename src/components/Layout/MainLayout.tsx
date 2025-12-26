@@ -8,14 +8,24 @@ import { PropertiesPanel } from '@/components/Properties/PropertiesPanel';
 import { AssembliesPanel } from '@/components/Assemblies/AssembliesPanel';
 import { ProjectDetailsPanel } from '@/components/ProjectDetails/ProjectDetailsPanel';
 import { CutListModal } from '@/components/CutList/CutListModal';
+import { SettingsModal } from '@/components/Settings/SettingsModal';
+import { RecoveryModal } from '@/components/Recovery/RecoveryModal';
 import { useUIStore } from '@/stores/uiStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useRecovery } from '@/hooks/useRecovery';
 
 export function MainLayout() {
-  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, theme } = useUIStore();
+  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, settingsModalOpen, theme } = useUIStore();
 
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
+
+  // Enable auto-save
+  const { lastSaveTime, isSaving } = useAutoSave();
+
+  // Enable recovery system
+  const { recoveryAvailable, isCheckingRecovery, recoverProject, dismissRecovery } = useRecovery();
 
   // Theme-based colors with better contrast between UI and canvas
   const colors = {
@@ -80,8 +90,14 @@ export function MainLayout() {
       </div>
 
       {/* Status Bar */}
-      <div className={`h-8 ${colors.toolbarBg} border-t ${colors.border} flex items-center px-4 text-xs ${colors.textMuted}`}>
+      <div className={`h-8 ${colors.toolbarBg} border-t ${colors.border} flex items-center px-4 text-xs ${colors.textMuted} gap-4`}>
         <span>Ready</span>
+        {isSaving && <span className="text-blue-500">Auto-saving...</span>}
+        {!isSaving && lastSaveTime && (
+          <span>
+            Last auto-save: {lastSaveTime.toLocaleTimeString()}
+          </span>
+        )}
       </div>
 
       {/* Keyboard Shortcuts Help Modal */}
@@ -89,6 +105,17 @@ export function MainLayout() {
 
       {/* Cut List Modal */}
       {cutListModalOpen && <CutListModal />}
+
+      {/* Settings Modal */}
+      {settingsModalOpen && <SettingsModal />}
+
+      {/* Recovery Modal */}
+      {!isCheckingRecovery && recoveryAvailable && (
+        <RecoveryModal
+          onRecover={recoverProject}
+          onDismiss={dismissRecovery}
+        />
+      )}
     </div>
   );
 }

@@ -37,6 +37,7 @@ export function useKeyboardShortcuts() {
     toggleRulers,
     toggleLibraryPanel,
     togglePropertiesPanel,
+    toggleSettingsModal,
   } = useUIStore();
 
   useEffect(() => {
@@ -168,6 +169,13 @@ export function useKeyboardShortcuts() {
         return;
       }
 
+      // Open Settings (Cmd/Ctrl+,)
+      if (modifier && e.key === ',') {
+        e.preventDefault();
+        toggleSettingsModal();
+        return;
+      }
+
       // Select All (Cmd/Ctrl+A)
       if (modifier && e.key === 'a') {
         e.preventDefault();
@@ -199,5 +207,6 @@ export function useKeyboardShortcuts() {
     toggleRulers,
     toggleLibraryPanel,
     togglePropertiesPanel,
+    toggleSettingsModal,
   ]);
 }

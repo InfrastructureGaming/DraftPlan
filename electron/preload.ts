@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('fs:writeFile', filePath, data),
   readFile: (filePath: string) =>
     ipcRenderer.invoke('fs:readFile', filePath),
+  deleteFile: (filePath: string) =>
+    ipcRenderer.invoke('fs:deleteFile', filePath),
 
   // App operations
   quit: () =>

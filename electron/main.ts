@@ -74,6 +74,15 @@ ipcMain.handle('fs:readFile', async (_event, filePath: string) => {
   }
 });
 
+ipcMain.handle('fs:deleteFile', async (_event, filePath: string) => {
+  try {
+    await fs.unlink(filePath);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
 ipcMain.handle('app:quit', () => {
   app.quit();
 });

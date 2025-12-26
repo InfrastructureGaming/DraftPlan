@@ -8,7 +8,7 @@ export function AppMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { theme, requestExportPNG, requestExportPDF } = useUIStore();
+  const { theme, requestExportPNG, requestExportPDF, toggleSettingsModal } = useUIStore();
 
   const {
     projectInfo,
@@ -163,6 +163,11 @@ export function AppMenu() {
     requestExportPDF();
   };
 
+  const handleSettings = () => {
+    setIsOpen(false);
+    toggleSettingsModal();
+  };
+
   const handleQuit = async () => {
     setIsOpen(false);
     if (hasUnsavedChanges) {
@@ -256,6 +261,16 @@ export function AppMenu() {
             className={`w-full text-left px-4 py-2 text-sm ${colors.menuText} ${colors.hover} transition-colors`}
           >
             Export PDF
+          </button>
+
+          <div className={`border-t ${colors.border} my-1`} />
+
+          <button
+            onClick={handleSettings}
+            className={`w-full text-left px-4 py-2 text-sm ${colors.menuText} ${colors.hover} transition-colors`}
+          >
+            Settings
+            <span className="float-right text-xs opacity-60">⌘,</span>
           </button>
 
           <div className={`border-t ${colors.border} my-1`} />
