@@ -11,6 +11,7 @@ import {
   moveNodeInWorldSpace,
   reorderChildren as reorderChildrenUtil,
 } from '@/lib/hierarchy/operations';
+import { addRecentProject } from '@/lib/storage/recentProjects';
 
 interface HistorySnapshot {
   objects: DraftObject[];
@@ -226,7 +227,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       hasUnsavedChanges: true,
     })),
 
-  loadProject: (project, filePath) =>
+  loadProject: (project, filePath) => {
+    // Add to recent projects if we have a file path
+    if (filePath) {
+      addRecentProject(project.projectInfo.name, filePath);
+    }
+
     set(() => ({
       projectInfo: project.projectInfo,
       objects: project.objects,
@@ -237,7 +243,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       selectedObjectIds: [],
       undoStack: [],
       redoStack: [],
-    })),
+    }));
+  },
 
   getProjectFile: () => {
     const state = get();
@@ -277,11 +284,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       redoStack: [],
     })),
 
-  markSaved: (filePath) =>
+  markSaved: (filePath) => {
+    const state = get();
+    // Add to recent projects
+    addRecentProject(state.projectInfo.name, filePath);
+
     set(() => ({
       currentFilePath: filePath,
       hasUnsavedChanges: false,
-    })),
+    }));
+  },
 
   // Assembly management implementations
   createAssembly: (name, childIds, color, parentId) =>

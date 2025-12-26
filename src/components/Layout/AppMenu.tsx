@@ -3,10 +3,12 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
 import { ProjectFile } from '@/types';
 import { registerFileHandlers } from '@/hooks/useKeyboardShortcuts';
+import { getRecentProjects, clearRecentProjects, removeRecentProject, type RecentProject } from '@/lib/storage/recentProjects';
 
 export function AppMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, requestExportPNG, requestExportPDF, toggleSettingsModal } = useUIStore();
 
@@ -29,6 +31,13 @@ export function AppMenu() {
       handleSaveAs,
     });
   }, []);
+
+  // Load recent projects when menu opens
+  useEffect(() => {
+    if (isOpen) {
+      setRecentProjects(getRecentProjects());
+    }
+  }, [isOpen]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -168,6 +177,51 @@ export function AppMenu() {
     toggleSettingsModal();
   };
 
+  const handleOpenRecentProject = async (recentProject: RecentProject) => {
+    setIsOpen(false);
+    if (hasUnsavedChanges) {
+      const confirmed = confirm('You have unsaved changes. Open a different project anyway?');
+      if (!confirmed) return;
+    }
+
+    if (!window.electronAPI || !window.electronAPI.readFile) {
+      alert('Electron API not available. Make sure you are running in Electron.');
+      return;
+    }
+
+    try {
+      const fileResult = await window.electronAPI.readFile(recentProject.filePath);
+
+      if (fileResult.success && fileResult.data) {
+        try {
+          const project: ProjectFile = JSON.parse(fileResult.data);
+          loadProject(project, recentProject.filePath);
+          alert('Project loaded successfully!');
+        } catch (error) {
+          alert(`Failed to parse project file: ${(error as Error).message}`);
+          // Remove from recent projects if file is invalid
+          removeRecentProject(recentProject.filePath);
+        }
+      } else {
+        alert(`Failed to read project file: ${fileResult.error}`);
+        // Remove from recent projects if file can't be read
+        removeRecentProject(recentProject.filePath);
+      }
+    } catch (error) {
+      console.error('Error opening recent project:', error);
+      alert(`Error opening file: ${(error as Error).message}`);
+    }
+  };
+
+  const handleClearRecentProjects = () => {
+    setIsOpen(false);
+    const confirmed = confirm('Clear all recent projects?');
+    if (confirmed) {
+      clearRecentProjects();
+      setRecentProjects([]);
+    }
+  };
+
   const handleQuit = async () => {
     setIsOpen(false);
     if (hasUnsavedChanges) {
@@ -228,6 +282,32 @@ export function AppMenu() {
             Open
             <span className="float-right text-xs opacity-60">⌘O</span>
           </button>
+
+          {/* Recent Projects Section */}
+          {recentProjects.length > 0 && (
+            <>
+              <div className={`border-t ${colors.border} my-1`} />
+              <div className={`px-4 py-1 text-xs ${colors.menuText} opacity-60`}>
+                Recent Projects
+              </div>
+              {recentProjects.map((project) => (
+                <button
+                  key={project.filePath}
+                  onClick={() => handleOpenRecentProject(project)}
+                  className={`w-full text-left px-4 py-2 text-sm ${colors.menuText} ${colors.hover} transition-colors`}
+                  title={project.filePath}
+                >
+                  <div className="truncate">{project.name}</div>
+                </button>
+              ))}
+              <button
+                onClick={handleClearRecentProjects}
+                className={`w-full text-left px-4 py-2 text-xs ${colors.menuText} ${colors.hover} transition-colors opacity-60`}
+              >
+                Clear Recent Projects
+              </button>
+            </>
+          )}
 
           <div className={`border-t ${colors.border} my-1`} />
 
