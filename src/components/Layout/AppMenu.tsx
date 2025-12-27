@@ -12,20 +12,20 @@ export function AppMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, requestExportPNG, requestExportPDF, toggleSettingsModal } = useUIStore();
 
-  const {
-    projectInfo,
-    currentFilePath,
-    hasUnsavedChanges,
-    getProjectFile,
-    loadProject,
-    newProject,
-    markSaved,
-  } = useProjectStore();
+  // Subscribe to specific state we need (proper reactivity)
+  const projectInfo = useProjectStore((state) => state.tabs[state.activeTabIndex]?.projectInfo);
+  const currentFilePath = useProjectStore((state) => state.tabs[state.activeTabIndex]?.currentFilePath);
+  const hasUnsavedChanges = useProjectStore((state) => state.tabs[state.activeTabIndex]?.hasUnsavedChanges);
+  const tabs = useProjectStore((state) => state.tabs);
+
+  // Get actions
+  const { getProjectFile, loadProject, newProject, markSaved } = useProjectStore();
 
   // Register file handlers for keyboard shortcuts
   useEffect(() => {
     registerFileHandlers({
       handleNew,
+      handleNewTab: null,
       handleOpen,
       handleSave,
       handleSaveAs,
@@ -58,14 +58,18 @@ export function AppMenu() {
 
   const handleNew = async () => {
     setIsOpen(false);
-    if (hasUnsavedChanges) {
-      const confirmed = confirm('You have unsaved changes. Create a new project anyway?');
-      if (!confirmed) return;
-    }
 
     const projectName = prompt('Enter project name:', 'Untitled Project');
     if (projectName !== null) {
-      newProject(projectName);
+      // Check if current tab is empty and untitled - if so, replace it; otherwise create new tab
+      const currentTab = tabs[useProjectStore.getState().activeTabIndex];
+      const isEmptyUntitledTab =
+        !currentTab?.currentFilePath &&
+        !currentTab?.hasUnsavedChanges &&
+        currentTab?.objects.length === 0 &&
+        currentTab?.assemblies.length === 0;
+
+      newProject(projectName, !isEmptyUntitledTab); // Open in new tab unless current is empty
     }
   };
 
@@ -126,10 +130,6 @@ export function AppMenu() {
 
   const handleOpen = async () => {
     setIsOpen(false);
-    if (hasUnsavedChanges) {
-      const confirmed = confirm('You have unsaved changes. Open a different project anyway?');
-      if (!confirmed) return;
-    }
 
     if (!window.electronAPI) {
       alert('Electron API not available. Make sure you are running in Electron.');
@@ -147,7 +147,9 @@ export function AppMenu() {
         if (fileResult.success && fileResult.data) {
           try {
             const project: ProjectFile = JSON.parse(fileResult.data);
-            loadProject(project, filePath);
+
+            // Always open in new tab
+            loadProject(project, filePath, true);
             alert('Project loaded successfully!');
           } catch (error) {
             alert(`Failed to parse project file: ${(error as Error).message}`);
@@ -179,10 +181,6 @@ export function AppMenu() {
 
   const handleOpenRecentProject = async (recentProject: RecentProject) => {
     setIsOpen(false);
-    if (hasUnsavedChanges) {
-      const confirmed = confirm('You have unsaved changes. Open a different project anyway?');
-      if (!confirmed) return;
-    }
 
     if (!window.electronAPI || !window.electronAPI.readFile) {
       alert('Electron API not available. Make sure you are running in Electron.');
@@ -195,7 +193,8 @@ export function AppMenu() {
       if (fileResult.success && fileResult.data) {
         try {
           const project: ProjectFile = JSON.parse(fileResult.data);
-          loadProject(project, recentProject.filePath);
+          // Always open in new tab
+          loadProject(project, recentProject.filePath, true);
           alert('Project loaded successfully!');
         } catch (error) {
           alert(`Failed to parse project file: ${(error as Error).message}`);

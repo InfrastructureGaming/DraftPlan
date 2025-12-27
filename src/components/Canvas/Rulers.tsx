@@ -7,7 +7,8 @@ interface RulersProps {
 }
 
 export function Rulers({ canvasWidth, canvasHeight }: RulersProps) {
-  const { camera } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const camera = useProjectStore((state) => state.tabs[state.activeTabIndex]?.camera);
   const { rulersVisible, theme, gridVisible, majorGridSize, minorGridVisible } = useUIStore();
 
   // Don't show rulers if disabled or if in isometric view (rulers not accurate in diagonal views)

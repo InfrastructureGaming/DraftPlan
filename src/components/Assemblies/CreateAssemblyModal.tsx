@@ -7,7 +7,11 @@ interface CreateAssemblyModalProps {
 }
 
 export function CreateAssemblyModal({ onClose }: CreateAssemblyModalProps) {
-  const { selectedObjectIds, createAssembly } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
+
+  // Get actions
+  const { createAssembly } = useProjectStore();
   const { theme } = useUIStore();
 
   const [name, setName] = useState(`Assembly ${Date.now().toString().slice(-4)}`);

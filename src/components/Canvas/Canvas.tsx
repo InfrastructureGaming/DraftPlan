@@ -20,7 +20,14 @@ export function Canvas() {
   const gridRef = useRef<THREE.Group | null>(null);
   const objectMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
-  const { camera, objects, assemblies, addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, selectedObjectIds, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const camera = useProjectStore((state) => state.tabs[state.activeTabIndex]?.camera);
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
+  const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
+  const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
+
+  // Get actions
+  const { addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
   const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);

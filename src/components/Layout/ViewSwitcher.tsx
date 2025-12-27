@@ -12,7 +12,11 @@ const VIEWS: { name: ViewType; label: string; key: string }[] = [
 ];
 
 export function ViewSwitcher() {
-  const { camera, setView } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const camera = useProjectStore((state) => state.tabs[state.activeTabIndex]?.camera);
+
+  // Get actions
+  const { setView } = useProjectStore();
   const { theme } = useUIStore();
 
   // Theme-based colors

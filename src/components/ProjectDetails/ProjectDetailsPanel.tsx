@@ -2,7 +2,11 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export function ProjectDetailsPanel() {
-  const { projectInfo, setProjectInfo } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const projectInfo = useProjectStore((state) => state.tabs[state.activeTabIndex]?.projectInfo);
+
+  // Get actions
+  const { setProjectInfo } = useProjectStore();
   const { theme } = useUIStore();
 
   // Theme-based colors

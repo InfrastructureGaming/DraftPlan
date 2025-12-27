@@ -12,7 +12,13 @@ interface TreeNodeProps {
 
 export function TreeNode({ id, type, depth, onSelect }: TreeNodeProps) {
   const { theme } = useUIStore();
-  const { objects, assemblies, toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion, reparentNode, deleteNode } = useProjectStore();
+
+  // Subscribe to active tab data with proper selectors
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
+  const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
+
+  // Get actions
+  const { toggleAssemblyVisibility, selectAssemblyObjects, toggleAssemblyExpansion, reparentNode, deleteNode } = useProjectStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
 

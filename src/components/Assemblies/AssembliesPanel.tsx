@@ -5,7 +5,13 @@ import { TreeNode } from './TreeNode';
 import { CreateAssemblyModal } from './CreateAssemblyModal';
 
 export function AssembliesPanel() {
-  const { objects, assemblies, selectedObjectIds, selectObject, reparentNode } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
+  const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
+  const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
+
+  // Get actions
+  const { selectObject, reparentNode } = useProjectStore();
   const { theme } = useUIStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);

@@ -3,7 +3,11 @@ import { useUIStore } from '@/stores/uiStore';
 import { ViewType } from '@/types';
 
 export function ViewCube() {
-  const { camera, setView } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const camera = useProjectStore((state) => state.tabs[state.activeTabIndex]?.camera);
+
+  // Get actions
+  const { setView } = useProjectStore();
   const { theme } = useUIStore();
   const currentView = camera.currentView;
 

@@ -2,7 +2,13 @@ import { useProjectStore } from '@/stores/projectStore';
 import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 export function PropertiesPanel() {
-  const { objects, assemblies, selectedObjectIds, updateObject, updateObjectPosition, reparentNode } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
+  const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
+  const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
+
+  // Get actions
+  const { updateObject, updateObjectPosition, reparentNode } = useProjectStore();
 
   // Get the first selected object
   const selectedObject = selectedObjectIds.length > 0

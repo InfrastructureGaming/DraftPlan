@@ -5,6 +5,7 @@ import { useUIStore } from '@/stores/uiStore';
 // File operation handlers will be set by FileMenu component
 let fileHandlers = {
   handleNew: null as (() => void) | null,
+  handleNewTab: null as (() => void) | null,
   handleOpen: null as (() => void) | null,
   handleSave: null as (() => void) | null,
   handleSaveAs: null as (() => void) | null,
@@ -30,6 +31,11 @@ export function useKeyboardShortcuts() {
     clearSelection,
     objects,
     selectObject,
+    tabs,
+    activeTabIndex,
+    switchToTab,
+    closeTab,
+    hasUnsavedChanges,
   } = useProjectStore();
 
   const {
@@ -92,6 +98,7 @@ export function useKeyboardShortcuts() {
         return;
       }
 
+
       if (modifier && e.key === 'o' && !e.shiftKey) {
         e.preventDefault();
         if (fileHandlers.handleOpen) fileHandlers.handleOpen();
@@ -105,6 +112,33 @@ export function useKeyboardShortcuts() {
         } else {
           if (fileHandlers.handleSave) fileHandlers.handleSave();
         }
+        return;
+      }
+
+      // Tab management
+      if (modifier && e.key === 'w') {
+        e.preventDefault();
+        if (tabs.length > 1 && hasUnsavedChanges) {
+          const confirmed = confirm('Close tab with unsaved changes?');
+          if (!confirmed) return;
+        }
+        closeTab(activeTabIndex);
+        return;
+      }
+
+      // Switch to previous tab (Cmd+Shift+[)
+      if (modifier && e.shiftKey && e.key === '[') {
+        e.preventDefault();
+        const prevIndex = activeTabIndex > 0 ? activeTabIndex - 1 : tabs.length - 1;
+        switchToTab(prevIndex);
+        return;
+      }
+
+      // Switch to next tab (Cmd+Shift+])
+      if (modifier && e.shiftKey && e.key === ']') {
+        e.preventDefault();
+        const nextIndex = activeTabIndex < tabs.length - 1 ? activeTabIndex + 1 : 0;
+        switchToTab(nextIndex);
         return;
       }
 
@@ -148,8 +182,8 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // Toggle Rulers (Cmd/Ctrl+R)
-      if (modifier && e.key === 'r') {
+      // Toggle Rulers (Ctrl+R only, not Cmd+R on Mac)
+      if (e.ctrlKey && e.key === 'r' && !e.metaKey) {
         e.preventDefault();
         toggleRulers();
         return;

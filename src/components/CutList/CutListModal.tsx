@@ -4,7 +4,8 @@ import { aggregateByMaterial } from '@/lib/cutlist/aggregator';
 import { MaterialGroupSection } from './MaterialGroupSection';
 
 export function CutListModal() {
-  const { objects } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
   const { theme, toggleCutListModal } = useUIStore();
 
   // Aggregate objects into material groups

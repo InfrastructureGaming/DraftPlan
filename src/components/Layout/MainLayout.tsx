@@ -3,6 +3,7 @@ import { AlignmentToolbar } from './AlignmentToolbar';
 import { AppMenu } from './AppMenu';
 import { ViewOptionsMenu } from './ViewOptionsMenu';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+import { TabBar } from './TabBar';
 import { LibraryPanel } from '@/components/Library/LibraryPanel';
 import { PropertiesPanel } from '@/components/Properties/PropertiesPanel';
 import { AssembliesPanel } from '@/components/Assemblies/AssembliesPanel';
@@ -46,6 +47,9 @@ export function MainLayout() {
         <div className="flex-1" />
         <AlignmentToolbar />
       </div>
+
+      {/* Tab Bar */}
+      <TabBar />
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">

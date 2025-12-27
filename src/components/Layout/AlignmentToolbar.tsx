@@ -2,7 +2,12 @@ import { useProjectStore } from '@/stores/projectStore';
 import { alignObjects, distributeObjects, AlignmentType, DistributionType } from '@/lib/geometry/alignment';
 
 export function AlignmentToolbar() {
-  const { objects, selectedObjectIds, updateObject } = useProjectStore();
+  // Subscribe to active tab data with proper selectors
+  const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
+  const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
+
+  // Get actions
+  const { updateObject } = useProjectStore();
 
   const selectedObjects = objects.filter((obj) => selectedObjectIds.includes(obj.id));
 
