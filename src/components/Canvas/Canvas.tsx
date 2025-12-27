@@ -790,8 +790,7 @@ export function Canvas() {
     currentZoomRef.current = camera.zoom;
   }, [camera.zoom]);
 
-  // Mouse wheel zoom handler - DISABLED FOR DEBUGGING
-  /*
+  // Mouse wheel zoom handler with cursor-centered zooming
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -803,10 +802,14 @@ export function Canvas() {
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // Calculate zoom delta
-      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+      // Calculate zoom delta with sensitivity factor
+      const sensitivity = 0.001; // Adjust for smoother zooming
+      const zoomDelta = 1 - e.deltaY * sensitivity;
       const oldZoom = currentZoomRef.current;
-      const newZoom = Math.max(0.1, Math.min(10, oldZoom * zoomDelta));
+      const newZoom = Math.max(0.25, Math.min(16, oldZoom * zoomDelta));
+
+      // Skip if zoom didn't actually change
+      if (Math.abs(newZoom - oldZoom) < 0.001) return;
 
       // Calculate world position before zoom
       const camera3D = cameraRef.current;
@@ -844,7 +847,6 @@ export function Canvas() {
       canvas.removeEventListener('wheel', handleWheel);
     };
   }, [setZoom, setPanOffset, camera.panOffset]);
-  */
 
   // Control handlers
   // Fixed zoom levels for discrete, incremental zoom control
