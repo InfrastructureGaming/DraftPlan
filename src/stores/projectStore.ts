@@ -77,7 +77,7 @@ interface ProjectState {
   createArray: (objectId: string, direction: 'x' | 'y' | 'z', count: number, spacing: number, createAsAssembly: boolean) => void;
 
   // Object management (hierarchy-aware)
-  updateObjectPosition: (id: string, worldPosition: Vector3D) => void;
+  updateObjectPosition: (id: string, worldPosition: Vector3D, skipHistory?: boolean) => void;
   updateObjectRotation: (id: string, rotation: Vector3D) => void;
 
   // Undo/Redo
@@ -798,13 +798,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       return { tabs };
     }),
 
-  updateObjectPosition: (id, worldPosition) =>
+  updateObjectPosition: (id, worldPosition, skipHistory = false) =>
     set((state) => {
       const tabs = [...state.tabs];
       const activeTab = tabs[state.activeTabIndex];
       if (!activeTab) return state;
 
-      const snapshot = createSnapshot(activeTab);
+      const snapshot = skipHistory ? null : createSnapshot(activeTab);
       const obj = activeTab.objects.find((o) => o.id === id);
       if (!obj) return state;
 
@@ -819,8 +819,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ...activeTab,
         objects: updatedObjects,
         hasUnsavedChanges: true,
-        undoStack: [...activeTab.undoStack, snapshot],
-        redoStack: [],
+        undoStack: snapshot ? [...activeTab.undoStack, snapshot] : activeTab.undoStack,
+        redoStack: snapshot ? [] : activeTab.redoStack,
       };
 
       return { tabs };

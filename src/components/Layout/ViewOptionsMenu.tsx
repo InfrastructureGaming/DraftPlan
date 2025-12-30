@@ -10,6 +10,7 @@ export function ViewOptionsMenu() {
     rulersVisible,
     minorGridVisible,
     viewCubeVisible,
+    gizmoVisible,
     libraryPanelOpen,
     propertiesPanelOpen,
     controlsPanelOpen,
@@ -20,6 +21,7 @@ export function ViewOptionsMenu() {
     toggleRulers,
     toggleMinorGrid,
     toggleViewCube,
+    toggleGizmo,
     toggleLibraryPanel,
     togglePropertiesPanel,
     toggleControlsPanel,
@@ -107,6 +109,16 @@ export function ViewOptionsMenu() {
               <span>View Cube</span>
               <span className="text-xs text-gray-500">
                 {viewCubeVisible && '✓'}
+              </span>
+            </button>
+
+            <button
+              onClick={toggleGizmo}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-sm hover:bg-gray-100 rounded transition-colors"
+            >
+              <span>Transform Gizmo</span>
+              <span className="text-xs text-gray-500">
+                {gizmoVisible && '✓'}
               </span>
             </button>
           </div>

@@ -10,6 +10,7 @@ import { CanvasControls } from './CanvasControls';
 import { ViewCube } from '../Layout/ViewCube';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
+import { TransformGizmo } from './TransformGizmo';
 import { computeWorldTransform, isNodeVisible, getEffectiveColor, worldToLocalPosition } from '@/lib/hierarchy/transforms';
 
 export function Canvas() {
@@ -28,7 +29,7 @@ export function Canvas() {
 
   // Get actions
   const { addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
-  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests } = useUIStore();
+  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests, gizmoVisible } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -1248,6 +1249,18 @@ export function Canvas() {
           currentView={camera.currentView}
           canvasWidth={canvasDimensions.width}
           canvasHeight={canvasDimensions.height}
+        />
+      )}
+
+      {/* Transform Gizmo */}
+      {gizmoVisible && canvasDimensions.width > 0 && cameraRef.current && (
+        <TransformGizmo
+          canvasWidth={canvasDimensions.width}
+          canvasHeight={canvasDimensions.height}
+          zoom={camera.zoom}
+          panOffset={camera.panOffset}
+          currentView={camera.currentView}
+          camera={cameraRef.current}
         />
       )}
 

@@ -13,33 +13,45 @@ Claude has full permissions to access and modify this document freely as needed.
 ### 1. 3D Transformation Gizmo Widget
 **Goal:** Add visual axis handles for intuitive object manipulation in 3D space
 
-**Status:** Not started
+**Status:** In Progress 🚧
 **Priority:** High (Critical UX improvement for 3D manipulation)
 
 **Phase 1 - Move Mode:**
-- [ ] Design gizmo appearance (arrows for X/Y/Z axes)
-- [ ] Implement axis color coding (X=Red, Y=Green, Z=Blue)
-- [ ] Add axis arrow click & drag handlers
-- [ ] Implement constrained movement along single axis
-- [ ] Add planar movement (click squares between axes)
-- [ ] Scale gizmo with zoom for consistent visibility
+- [x] Create TransformGizmo component with SVG rendering
+- [x] Position gizmo at selected object's world position
+- [x] Draw three axis arrows (X=Red, Y=Green, Z=Blue)
+- [x] Implement click detection for each axis
+- [x] Handle drag along constrained axis (single axis movement)
+- [x] Add real-time numerical feedback during drag (+X.XX")
+- [x] Scale gizmo with zoom for consistent visibility
+- [x] Add gizmo visibility toggle to View menu
 - [ ] Test in all views (orthographic + isometric)
+- [ ] Add planar movement squares (XY, XZ, YZ planes) - Future enhancement
 
-**Phase 2 - Rotate Mode (Future):**
+**Phase 2 - Settings (Optional enhancement):**
+- [ ] Add "Gizmo Scale" slider in Settings panel
+
+**Phase 3 - Rotate Mode (Future):**
 - [ ] Add rotation rings for each axis
 - [ ] Implement rotation angle calculation
 - [ ] Add visual feedback during rotation
 
-**Phase 3 - Scale Mode (Future):**
+**Phase 4 - Scale Mode (Future):**
 - [ ] Add scale handles at axis endpoints
 - [ ] Implement uniform vs non-uniform scaling
 - [ ] Add visual feedback during scaling
 
+**Design Decisions:**
+- Gizmo appears automatically when object is selected ✅
+- Real-time numerical feedback during drag (+/-X.XX") ✅
+- Standard industry colors (X=Red, Y=Green, Z=Blue) ✅
+- Gizmo scale TBD, will add settings slider if needed ✅
+- SVG-based rendering for consistency with existing architecture
+
 **Notes:**
 - Start with Move mode only - Rotate and Scale are future enhancements
-- Standard industry colors for consistency
 - Address current issue: 2D mouse movement → 3D transformation is unintuitive
-- Visual style TBD, can iterate as we go
+- Will likely hit auto-compact during implementation (todo_master.md survives!)
 
 ---
 
