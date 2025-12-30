@@ -12,9 +12,9 @@ export function AssembliesPanel() {
 
   // Get actions
   const { selectObject, reparentNode } = useProjectStore();
-  const { theme } = useUIStore();
+  const { theme, assembliesPanelCollapsed, toggleAssembliesPanelCollapse } = useUIStore();
+  const isCollapsed = assembliesPanelCollapsed;
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOverRoot, setIsDragOverRoot] = useState(false);
 
   // Theme-based colors
@@ -73,16 +73,12 @@ export function AssembliesPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'}`}>
       {/* Header */}
-      <div className={`px-4 py-3 border-b ${colors.border} flex items-center justify-between`}>
+      <div className={`px-4 py-3 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={toggleAssembliesPanelCollapse}>
         <h2 className={`text-sm font-semibold ${colors.text}`}>Assemblies</h2>
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`w-6 h-6 flex items-center justify-center rounded ${colors.hover} transition-colors ${colors.text}`}
-          title={isCollapsed ? 'Expand' : 'Collapse'}
-        >
-          <span className="text-xs">{isCollapsed ? '▶' : '▼'}</span>
+        <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+          ▼
         </button>
       </div>
 

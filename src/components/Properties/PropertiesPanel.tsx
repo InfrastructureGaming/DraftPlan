@@ -4,16 +4,15 @@ import { useUIStore } from '@/stores/uiStore';
 import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 export function PropertiesPanel() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   // Subscribe to active tab data with proper selectors
   const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
   const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
   const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
 
-  // Get actions
+  // Get actions and collapse state from UIStore
   const { updateObject, updateObjectPosition, reparentNode } = useProjectStore();
-  const { theme } = useUIStore();
+  const { theme, propertiesPanelCollapsed, togglePropertiesPanelCollapse } = useUIStore();
+  const isCollapsed = propertiesPanelCollapsed;
 
   // Get the first selected object
   const selectedObject = selectedObjectIds.length > 0
@@ -51,7 +50,7 @@ export function PropertiesPanel() {
     return (
       <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} ${colors.bg}`}>
         {/* Header */}
-        <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
+        <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={togglePropertiesPanelCollapse}>
           <h2 className={`text-sm font-semibold ${colors.text}`}>Properties</h2>
           <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
             ▼
@@ -168,7 +167,7 @@ export function PropertiesPanel() {
   return (
     <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} overflow-y-auto ${colors.bg}`}>
       {/* Header */}
-      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
+      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={togglePropertiesPanelCollapse}>
         <h2 className={`text-sm font-semibold ${colors.text}`}>Properties</h2>
         <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
           ▼

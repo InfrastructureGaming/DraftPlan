@@ -18,7 +18,20 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useRecovery } from '@/hooks/useRecovery';
 
 export function MainLayout() {
-  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, settingsModalOpen, arrayModalOpen, theme, toggleArrayModal } = useUIStore();
+  const {
+    libraryPanelOpen,
+    propertiesPanelOpen,
+    assembliesPanelOpen,
+    projectDetailsPanelOpen,
+    cutListModalOpen,
+    settingsModalOpen,
+    arrayModalOpen,
+    projectDetailsPanelCollapsed,
+    propertiesPanelCollapsed,
+    assembliesPanelCollapsed,
+    theme,
+    toggleArrayModal
+  } = useUIStore();
 
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
@@ -63,7 +76,7 @@ export function MainLayout() {
               </div>
             )}
             {projectDetailsPanelOpen && (
-              <div className={`flex-1 overflow-hidden ${libraryPanelOpen ? `border-t ${colors.border}` : ''}`}>
+              <div className={`${projectDetailsPanelCollapsed ? 'flex-none' : 'flex-1'} overflow-hidden ${libraryPanelOpen ? `border-t ${colors.border}` : ''}`}>
                 <ProjectDetailsPanel />
               </div>
             )}
@@ -81,12 +94,12 @@ export function MainLayout() {
         {(propertiesPanelOpen || assembliesPanelOpen) && (
           <div className={`w-64 ${colors.panelBg} border-l ${colors.border} flex flex-col`}>
             {propertiesPanelOpen && (
-              <div className="flex-1 overflow-hidden">
+              <div className={`${propertiesPanelCollapsed ? 'flex-none' : 'flex-1'} overflow-hidden`}>
                 <PropertiesPanel />
               </div>
             )}
             {assembliesPanelOpen && (
-              <div className={`flex-1 overflow-hidden ${propertiesPanelOpen ? `border-t ${colors.border}` : ''}`}>
+              <div className={`${assembliesPanelCollapsed ? 'flex-none' : 'flex-1'} overflow-hidden ${propertiesPanelOpen ? `border-t ${colors.border}` : ''}`}>
                 <AssembliesPanel />
               </div>
             )}

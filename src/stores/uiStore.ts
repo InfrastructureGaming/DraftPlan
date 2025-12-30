@@ -12,6 +12,11 @@ interface UIState extends ProjectSettings {
   settingsModalOpen: boolean;
   arrayModalOpen: boolean;
   viewCubeVisible: boolean;
+
+  // Panel collapse states
+  projectDetailsPanelCollapsed: boolean;
+  propertiesPanelCollapsed: boolean;
+  assembliesPanelCollapsed: boolean;
   majorGridSize: number; // Size in inches for major grid lines
   minorGridVisible: boolean; // Toggle for 1/16" grid visibility
   snapIncrement: number; // Snap increment in inches for arrow key movement
@@ -37,6 +42,9 @@ interface UIState extends ProjectSettings {
   toggleSettingsModal: () => void;
   toggleArrayModal: () => void;
   toggleViewCube: () => void;
+  toggleProjectDetailsPanelCollapse: () => void;
+  togglePropertiesPanelCollapse: () => void;
+  toggleAssembliesPanelCollapse: () => void;
   setMajorGridSize: (size: number) => void;
   toggleMinorGrid: () => void;
   setSnapIncrement: (increment: number) => void;
@@ -60,6 +68,9 @@ export const useUIStore = create<UIState>((set) => ({
   settingsModalOpen: false, // Default to closed
   arrayModalOpen: false, // Default to closed
   viewCubeVisible: true, // Default to visible
+  projectDetailsPanelCollapsed: false, // Default to expanded
+  propertiesPanelCollapsed: false, // Default to expanded
+  assembliesPanelCollapsed: false, // Default to expanded
   majorGridSize: 1, // Default to 1 inch
   minorGridVisible: true, // Default to visible
   snapIncrement: 1, // Default to 1 inch
@@ -89,6 +100,12 @@ export const useUIStore = create<UIState>((set) => ({
     set((state) => ({ arrayModalOpen: !state.arrayModalOpen })),
   toggleViewCube: () =>
     set((state) => ({ viewCubeVisible: !state.viewCubeVisible })),
+  toggleProjectDetailsPanelCollapse: () =>
+    set((state) => ({ projectDetailsPanelCollapsed: !state.projectDetailsPanelCollapsed })),
+  togglePropertiesPanelCollapse: () =>
+    set((state) => ({ propertiesPanelCollapsed: !state.propertiesPanelCollapsed })),
+  toggleAssembliesPanelCollapse: () =>
+    set((state) => ({ assembliesPanelCollapsed: !state.assembliesPanelCollapsed })),
   setMajorGridSize: (size) => set({ majorGridSize: size }),
   toggleMinorGrid: () => set((state) => ({ minorGridVisible: !state.minorGridVisible })),
   setSnapIncrement: (increment) => set({ snapIncrement: increment }),

@@ -1,16 +1,14 @@
-import { useState } from 'react';
 import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export function ProjectDetailsPanel() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   // Subscribe to active tab data with proper selectors
   const projectInfo = useProjectStore((state) => state.tabs[state.activeTabIndex]?.projectInfo);
 
-  // Get actions
+  // Get actions and collapse state from UIStore
   const { setProjectInfo } = useProjectStore();
-  const { theme } = useUIStore();
+  const { theme, projectDetailsPanelCollapsed, toggleProjectDetailsPanelCollapse } = useUIStore();
+  const isCollapsed = projectDetailsPanelCollapsed;
 
   // Theme-based colors
   const colors = {
@@ -69,7 +67,7 @@ export function ProjectDetailsPanel() {
   return (
     <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} overflow-y-auto ${colors.bg}`}>
       {/* Header */}
-      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
+      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={toggleProjectDetailsPanelCollapse}>
         <h2 className={`text-sm font-semibold ${colors.text}`}>Project Details</h2>
         <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
           ▼
