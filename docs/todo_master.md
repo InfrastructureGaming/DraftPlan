@@ -13,7 +13,7 @@ Claude has full permissions to access and modify this document freely as needed.
 ### 1. 3D Transformation Gizmo Widget
 **Goal:** Add visual axis handles for intuitive object manipulation in 3D space
 
-**Status:** In Progress 🚧
+**Status:** ✅ Complete (Phase 1)
 **Priority:** High (Critical UX improvement for 3D manipulation)
 
 **Phase 1 - Move Mode:**
@@ -25,7 +25,8 @@ Claude has full permissions to access and modify this document freely as needed.
 - [x] Add real-time numerical feedback during drag (+X.XX")
 - [x] Scale gizmo with zoom for consistent visibility
 - [x] Add gizmo visibility toggle to View menu
-- [ ] Test in all views (orthographic + isometric)
+- [x] Fix coordinate transformation for smooth, flicker-free dragging
+- [x] Test in all views (orthographic + isometric)
 - [ ] Add planar movement squares (XY, XZ, YZ planes) - Future enhancement
 
 **Phase 2 - Settings (Optional enhancement):**
@@ -55,30 +56,6 @@ Claude has full permissions to access and modify this document freely as needed.
 
 ---
 
-### 3. Custom Lumber Library
-**Goal:** Allow users to add custom lumber items to the library
-
-**Status:** Not started
-**Priority:** Medium (Essential feature, but depends on gizmo for good UX)
-
-**Tasks:**
-- [ ] Design "Add Custom Lumber" UI/modal
-- [ ] Add form fields: Name, Width, Height, Depth (Length), Material
-- [ ] Implement storage for custom items (localStorage or project file?)
-- [ ] Display custom items in library panel (separate section?)
-- [ ] Add edit/delete functionality for custom items
-- [ ] Ensure custom items work with all existing features (drag & drop, etc.)
-
-**Data Fields:**
-- Name (string)
-- Dimensions: Width, Height, Depth (inches, decimal)
-- Material (string)
-- ~~Pricing~~ (excluded - varies by supplier)
-
-**Notes:**
-- Wait until gizmo is complete for better manipulation experience
-- Consider: Should custom items be global (all projects) or per-project?
-
 ---
 
 ## Backlog - Future Features
@@ -106,6 +83,21 @@ Claude has full permissions to access and modify this document freely as needed.
 ## Recently Completed ✅
 
 ### Session: 2024-12-30
+- ✅ **Custom Lumber Library** - Add, edit, and manage custom lumber items
+  - "+ Custom" button in Library panel for adding custom items
+  - AddCustomLumberModal with form fields for Name, Dimensions, Material, Category
+  - customLumberStore for localStorage persistence (survives app restart)
+  - Edit/delete buttons appear on hover for custom items
+  - Custom items display "Custom" badge for easy identification
+  - Custom items fully integrated with drag & drop and all existing features
+  - Items grouped by category alongside standard library items
+- ✅ **3D Transformation Gizmo** - Visual axis handles for precise object manipulation
+  - Industry-standard color coding (X=Red, Y=Green, Z=Blue)
+  - Constrained single-axis dragging with real-time numerical feedback
+  - Smooth, flicker-free performance using local position deltas
+  - Gizmo stays locked to object during pan/zoom operations
+  - View-aware axis visibility (only shows relevant axes)
+  - Visibility toggle in View menu
 - ✅ **Panel Stacking System** - Intelligent panel collapse with space reallocation
   - All three panels (Project Details, Properties, Assemblies) collapsible
   - Collapsed panels take minimal space, expanded panels grow to fill available
@@ -158,4 +150,4 @@ Claude has full permissions to access and modify this document freely as needed.
 
 ---
 
-*Last Updated: 2024-12-30 - Panel Stacking Complete*
+*Last Updated: 2024-12-30 - Custom Lumber Library Complete*

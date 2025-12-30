@@ -2,15 +2,24 @@ import { useState } from 'react';
 import { LUMBER_LIBRARY, getCategories, getLumberByCategory } from '@/lib/data/lumber';
 import { LumberLibraryItem } from '@/types';
 import { useUIStore } from '@/stores/uiStore';
+import { useCustomLumberStore } from '@/stores/customLumberStore';
+import { AddCustomLumberModal } from './AddCustomLumberModal';
 
 export function LibraryPanel() {
   const { theme } = useUIStore();
+  const { customItems } = useCustomLumberStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(['Dimensional Lumber']) // Dimensional Lumber expanded by default
   );
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<LumberLibraryItem | null>(null);
 
-  const categories = getCategories();
+  // Combine static library with custom items
+  const allItems = [...LUMBER_LIBRARY, ...customItems];
+
+  // Get all unique categories (including custom)
+  const categories = Array.from(new Set(allItems.map((item) => item.category)));
 
   // Theme-based colors
   const colors = {
@@ -33,18 +42,32 @@ export function LibraryPanel() {
   };
 
   const filteredItems = searchQuery
-    ? LUMBER_LIBRARY.filter(
+    ? allItems.filter(
         (item) =>
           item.nominalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : null;
 
+  // Get items by category from all items
+  const getItemsByCategory = (category: string): LumberLibraryItem[] => {
+    return allItems.filter((item) => item.category === category);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className={`p-4 border-b ${colors.border}`}>
-        <h2 className={`text-sm font-semibold mb-2 ${colors.text}`}>Library</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className={`text-sm font-semibold ${colors.text}`}>Library</h2>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className={`px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors`}
+            title="Add custom lumber item"
+          >
+            + Custom
+          </button>
+        </div>
 
         {/* Search */}
         <input
@@ -64,7 +87,17 @@ export function LibraryPanel() {
             {filteredItems.length === 0 ? (
               <p className={`text-xs ${colors.textMuted} text-center py-4`}>No items found</p>
             ) : (
-              filteredItems.map((item) => <LumberItem key={item.id} item={item} colors={colors} />)
+              filteredItems.map((item) => (
+                <LumberItem
+                  key={item.id}
+                  item={item}
+                  colors={colors}
+                  onEdit={() => {
+                    setEditingItem(item);
+                    setIsAddModalOpen(true);
+                  }}
+                />
+              ))
             )}
           </div>
         ) : (
@@ -74,15 +107,30 @@ export function LibraryPanel() {
               <CategorySection
                 key={category}
                 category={category}
-                items={getLumberByCategory(category)}
+                items={getItemsByCategory(category)}
                 isExpanded={expandedCategories.has(category)}
                 onToggle={() => toggleCategory(category)}
                 colors={colors}
+                onEdit={(item) => {
+                  setEditingItem(item);
+                  setIsAddModalOpen(true);
+                }}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Add/Edit Custom Lumber Modal */}
+      {isAddModalOpen && (
+        <AddCustomLumberModal
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingItem(null);
+          }}
+          editItem={editingItem}
+        />
+      )}
     </div>
   );
 }
@@ -93,9 +141,10 @@ interface CategorySectionProps {
   isExpanded: boolean;
   onToggle: () => void;
   colors: any;
+  onEdit: (item: LumberLibraryItem) => void;
 }
 
-function CategorySection({ category, items, isExpanded, onToggle, colors }: CategorySectionProps) {
+function CategorySection({ category, items, isExpanded, onToggle, colors, onEdit }: CategorySectionProps) {
   return (
     <div className={`border-b ${colors.border}`}>
       {/* Category Header */}
@@ -111,7 +160,7 @@ function CategorySection({ category, items, isExpanded, onToggle, colors }: Cate
       {isExpanded && (
         <div className={colors.categoryBg}>
           {items.map((item) => (
-            <LumberItem key={item.id} item={item} colors={colors} />
+            <LumberItem key={item.id} item={item} colors={colors} onEdit={() => onEdit(item)} />
           ))}
         </div>
       )}
@@ -122,13 +171,29 @@ function CategorySection({ category, items, isExpanded, onToggle, colors }: Cate
 interface LumberItemProps {
   item: LumberLibraryItem;
   colors: any;
+  onEdit: () => void;
 }
 
-function LumberItem({ item, colors }: LumberItemProps) {
+function LumberItem({ item, colors, onEdit }: LumberItemProps) {
+  const { deleteCustomItem } = useCustomLumberStore();
+  const [showActions, setShowActions] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     // Set the drag data to include the library item
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete "${item.nominalName}"?`)) {
+      deleteCustomItem(item.id);
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit();
   };
 
   const { width, height, depth } = item.actualDimensions;
@@ -137,16 +202,44 @@ function LumberItem({ item, colors }: LumberItemProps) {
     <div
       draggable
       onDragStart={handleDragStart}
-      className={`px-4 py-2 ${colors.hover} cursor-move transition-colors border-b ${colors.border} last:border-b-0`}
+      onMouseEnter={() => item.isCustom && setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+      className={`px-4 py-2 ${colors.hover} cursor-move transition-colors border-b ${colors.border} last:border-b-0 relative`}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className={`text-sm font-medium ${colors.text}`}>{item.nominalName}</div>
+          <div className={`text-sm font-medium ${colors.text} flex items-center gap-2`}>
+            {item.nominalName}
+            {item.isCustom && (
+              <span className="text-xs px-1 py-0.5 bg-blue-600 text-white rounded">Custom</span>
+            )}
+          </div>
           <div className={`text-xs ${colors.textMuted}`}>
             {width}" × {height}" × {depth}"
           </div>
         </div>
-        <div className={`text-xs ${colors.textMuted}`}>⋮⋮</div>
+
+        {/* Actions for custom items */}
+        {item.isCustom && showActions ? (
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={handleEdit}
+              className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+              title="Edit"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+              title="Delete"
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <div className={`text-xs ${colors.textMuted}`}>⋮⋮</div>
+        )}
       </div>
     </div>
   );
