@@ -73,6 +73,9 @@ interface ProjectState {
   reparentNode: (nodeId: string, newParentId?: string) => void;
   reorderChildren: (parentId: string | undefined, fromIndex: number, toIndex: number) => void;
 
+  // Array tool
+  createArray: (objectId: string, direction: 'x' | 'y' | 'z', count: number, spacing: number, createAsAssembly: boolean) => void;
+
   // Object management (hierarchy-aware)
   updateObjectPosition: (id: string, worldPosition: Vector3D) => void;
   updateObjectRotation: (id: string, rotation: Vector3D) => void;
@@ -711,6 +714,86 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         undoStack: [...activeTab.undoStack, snapshot],
         redoStack: [],
       };
+
+      return { tabs };
+    }),
+
+  createArray: (objectId, direction, count, spacing, createAsAssembly) =>
+    set((state) => {
+      const tabs = [...state.tabs];
+      const activeTab = tabs[state.activeTabIndex];
+      if (!activeTab) return state;
+
+      const snapshot = createSnapshot(activeTab);
+
+      // Find the source object
+      const sourceObject = activeTab.objects.find((obj) => obj.id === objectId);
+      if (!sourceObject) return state;
+
+      const newObjects: DraftObject[] = [];
+      const newObjectIds: string[] = [];
+
+      // Create copies along the specified axis
+      for (let i = 1; i < count; i++) {
+        const offset = spacing * i;
+        const newObject: DraftObject = {
+          ...JSON.parse(JSON.stringify(sourceObject)), // Deep clone
+          id: `object-${Date.now()}-${i}`,
+          name: `${sourceObject.name} (${i + 1})`,
+          localPosition: {
+            x: sourceObject.localPosition.x + (direction === 'x' ? offset : 0),
+            y: sourceObject.localPosition.y + (direction === 'y' ? offset : 0),
+            z: sourceObject.localPosition.z + (direction === 'z' ? offset : 0),
+          },
+        };
+        newObjects.push(newObject);
+        newObjectIds.push(newObject.id);
+      }
+
+      const updatedObjects = [...activeTab.objects, ...newObjects];
+      let updatedAssemblies = activeTab.assemblies;
+
+      // Create assembly if requested
+      if (createAsAssembly) {
+        const allObjectIds = [objectId, ...newObjectIds];
+        const assemblyName = `${sourceObject.name} Array (${count})`;
+        const newAssembly: Assembly = {
+          id: `assembly-${Date.now()}`,
+          name: assemblyName,
+          color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+          visible: true,
+          notes: `Array of ${count} copies along ${direction.toUpperCase()} axis with ${spacing}" spacing`,
+          children: allObjectIds,
+          parentId: sourceObject.parentId,
+          expanded: true,
+          localPosition: { x: 0, y: 0, z: 0 },
+          rotation: { x: 0, y: 0, z: 0 },
+        };
+
+        // Update parent IDs for all objects in the array
+        const finalObjects = updatedObjects.map((obj) =>
+          allObjectIds.includes(obj.id) ? { ...obj, parentId: newAssembly.id } : obj
+        );
+
+        updatedAssemblies = [...activeTab.assemblies, newAssembly];
+
+        tabs[state.activeTabIndex] = {
+          ...activeTab,
+          objects: finalObjects,
+          assemblies: updatedAssemblies,
+          hasUnsavedChanges: true,
+          undoStack: [...activeTab.undoStack, snapshot],
+          redoStack: [],
+        };
+      } else {
+        tabs[state.activeTabIndex] = {
+          ...activeTab,
+          objects: updatedObjects,
+          hasUnsavedChanges: true,
+          undoStack: [...activeTab.undoStack, snapshot],
+          redoStack: [],
+        };
+      }
 
       return { tabs };
     }),

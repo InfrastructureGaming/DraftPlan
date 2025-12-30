@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useProjectStore } from '@/stores/projectStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export function ProjectDetailsPanel() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   // Subscribe to active tab data with proper selectors
   const projectInfo = useProjectStore((state) => state.tabs[state.activeTabIndex]?.projectInfo);
 
@@ -64,14 +67,18 @@ export function ProjectDetailsPanel() {
   };
 
   return (
-    <div className={`flex flex-col h-full overflow-y-auto ${colors.bg}`}>
+    <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} overflow-y-auto ${colors.bg}`}>
       {/* Header */}
-      <div className={`p-4 border-b ${colors.border}`}>
+      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
         <h2 className={`text-sm font-semibold ${colors.text}`}>Project Details</h2>
+        <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+          ▼
+        </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4">
+      {!isCollapsed && (
+        <div className="p-4 space-y-4">
         {/* Project Name */}
         <div>
           <label className={`block text-xs font-medium ${colors.text} mb-1`}>Project Name</label>
@@ -165,7 +172,8 @@ export function ProjectDetailsPanel() {
             className={`w-full px-2 py-1 text-sm border ${colors.inputBorder} ${colors.inputBg} ${colors.text} rounded focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none`}
           />
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

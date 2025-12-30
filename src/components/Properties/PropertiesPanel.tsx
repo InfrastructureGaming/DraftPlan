@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useProjectStore } from '@/stores/projectStore';
+import { useUIStore } from '@/stores/uiStore';
 import { computeWorldTransform } from '@/lib/hierarchy/transforms';
 
 export function PropertiesPanel() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   // Subscribe to active tab data with proper selectors
   const objects = useProjectStore((state) => state.tabs[state.activeTabIndex]?.objects || []);
   const assemblies = useProjectStore((state) => state.tabs[state.activeTabIndex]?.assemblies || []);
@@ -9,6 +13,7 @@ export function PropertiesPanel() {
 
   // Get actions
   const { updateObject, updateObjectPosition, reparentNode } = useProjectStore();
+  const { theme } = useUIStore();
 
   // Get the first selected object
   const selectedObject = selectedObjectIds.length > 0
@@ -20,11 +25,43 @@ export function PropertiesPanel() {
     ? computeWorldTransform(selectedObject.id, objects, assemblies)
     : null;
 
+  // Local state for position inputs (allows proper typing/deletion)
+  const [positionInputs, setPositionInputs] = useState({ x: '0', y: '0', z: '0' });
+
+  // Sync local state with world transform when object changes
+  useEffect(() => {
+    if (worldTransform) {
+      setPositionInputs({
+        x: worldTransform.position.x.toString(),
+        y: worldTransform.position.y.toString(),
+        z: worldTransform.position.z.toString(),
+      });
+    }
+  }, [selectedObject?.id, worldTransform?.position.x, worldTransform?.position.y, worldTransform?.position.z]);
+
+  // Theme-based colors for collapsed state
+  const colors = {
+    border: theme === 'dark' ? 'border-[#333333]' : theme === 'blueprint' ? 'border-[#1E3A8A]' : 'border-gray-300',
+    text: theme === 'dark' ? 'text-white' : theme === 'blueprint' ? 'text-white' : 'text-gray-800',
+    textMuted: theme === 'dark' ? 'text-gray-400' : theme === 'blueprint' ? 'text-blue-200' : 'text-gray-500',
+    bg: theme === 'dark' ? 'bg-[#1a1a1a]' : theme === 'blueprint' ? 'bg-[#0A2463]' : 'bg-white',
+  };
+
   if (!selectedObject || !worldTransform) {
     return (
-      <div className="flex flex-col h-full p-4">
-        <h2 className="text-sm font-semibold mb-2 text-gray-800">Properties</h2>
-        <p className="text-xs text-gray-500">Select an object to view properties</p>
+      <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} ${colors.bg}`}>
+        {/* Header */}
+        <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
+          <h2 className={`text-sm font-semibold ${colors.text}`}>Properties</h2>
+          <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+            ▼
+          </button>
+        </div>
+        {!isCollapsed && (
+          <div className="p-4">
+            <p className={`text-xs ${colors.textMuted}`}>Select an object to view properties</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -33,16 +70,52 @@ export function PropertiesPanel() {
     updateObject(selectedObject.id, { name: e.target.value });
   };
 
-  const handlePositionChange = (axis: 'x' | 'y' | 'z', value: string) => {
+  const handlePositionInputChange = (axis: 'x' | 'y' | 'z', value: string) => {
+    // Update local state immediately (allows typing/deleting)
+    setPositionInputs((prev) => ({ ...prev, [axis]: value }));
+  };
+
+  const handlePositionCommit = (axis: 'x' | 'y' | 'z') => {
+    // Parse and commit the value to the store
+    const value = positionInputs[axis];
     let numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      // Apply grid snapping if enabled for this object
-      if (selectedObject.gridSnap) {
-        numValue = Math.round(numValue); // Snap to 1-inch grid
-      }
-      // Update world position (will be converted to local position in store)
-      const newWorldPos = { ...worldTransform.position, [axis]: numValue };
-      updateObjectPosition(selectedObject.id, newWorldPos);
+
+    if (isNaN(numValue)) {
+      // If invalid, reset to current world position
+      setPositionInputs((prev) => ({
+        ...prev,
+        [axis]: worldTransform!.position[axis].toString(),
+      }));
+      return;
+    }
+
+    // Apply grid snapping if enabled for this object
+    if (selectedObject!.gridSnap) {
+      numValue = Math.round(numValue); // Snap to 1-inch grid
+    }
+
+    // Get current world position and update only the changed axis
+    const currentWorldPos = worldTransform!.position;
+    const newWorldPos = {
+      x: axis === 'x' ? numValue : currentWorldPos.x,
+      y: axis === 'y' ? numValue : currentWorldPos.y,
+      z: axis === 'z' ? numValue : currentWorldPos.z,
+    };
+
+    updateObjectPosition(selectedObject!.id, newWorldPos);
+  };
+
+  const handlePositionKeyDown = (e: React.KeyboardEvent, axis: 'x' | 'y' | 'z') => {
+    if (e.key === 'Enter') {
+      handlePositionCommit(axis);
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'Escape') {
+      // Reset to current value
+      setPositionInputs((prev) => ({
+        ...prev,
+        [axis]: worldTransform!.position[axis].toString(),
+      }));
+      (e.target as HTMLInputElement).blur();
     }
   };
 
@@ -93,14 +166,18 @@ export function PropertiesPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className={`flex flex-col ${isCollapsed ? 'h-auto' : 'h-full'} overflow-y-auto ${colors.bg}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-300">
-        <h2 className="text-sm font-semibold text-gray-800">Properties</h2>
+      <div className={`p-4 border-b ${colors.border} flex items-center justify-between cursor-pointer`} onClick={() => setIsCollapsed(!isCollapsed)}>
+        <h2 className={`text-sm font-semibold ${colors.text}`}>Properties</h2>
+        <button className={`text-xs ${colors.textMuted} transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+          ▼
+        </button>
       </div>
 
       {/* Properties Content */}
-      <div className="p-4 space-y-4">
+      {!isCollapsed && (
+        <div className="p-4 space-y-4">
         {/* Object Name */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
@@ -152,30 +229,33 @@ export function PropertiesPanel() {
             <div>
               <label className="block text-xs text-gray-500 mb-1">X</label>
               <input
-                type="number"
-                value={worldTransform.position.x}
-                onChange={(e) => handlePositionChange('x', e.target.value)}
-                step="1"
+                type="text"
+                value={positionInputs.x}
+                onChange={(e) => handlePositionInputChange('x', e.target.value)}
+                onBlur={() => handlePositionCommit('x')}
+                onKeyDown={(e) => handlePositionKeyDown(e, 'x')}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Y</label>
               <input
-                type="number"
-                value={worldTransform.position.y}
-                onChange={(e) => handlePositionChange('y', e.target.value)}
-                step="1"
+                type="text"
+                value={positionInputs.y}
+                onChange={(e) => handlePositionInputChange('y', e.target.value)}
+                onBlur={() => handlePositionCommit('y')}
+                onKeyDown={(e) => handlePositionKeyDown(e, 'y')}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Z</label>
               <input
-                type="number"
-                value={worldTransform.position.z}
-                onChange={(e) => handlePositionChange('z', e.target.value)}
-                step="1"
+                type="text"
+                value={positionInputs.z}
+                onChange={(e) => handlePositionInputChange('z', e.target.value)}
+                onBlur={() => handlePositionCommit('z')}
+                onKeyDown={(e) => handlePositionKeyDown(e, 'z')}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -335,7 +415,8 @@ export function PropertiesPanel() {
             </p>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

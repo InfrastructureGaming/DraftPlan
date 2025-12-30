@@ -11,13 +11,14 @@ import { ProjectDetailsPanel } from '@/components/ProjectDetails/ProjectDetailsP
 import { CutListModal } from '@/components/CutList/CutListModal';
 import { SettingsModal } from '@/components/Settings/SettingsModal';
 import { RecoveryModal } from '@/components/Recovery/RecoveryModal';
+import { ArrayModal } from '@/components/Tools/ArrayModal';
 import { useUIStore } from '@/stores/uiStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useRecovery } from '@/hooks/useRecovery';
 
 export function MainLayout() {
-  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, settingsModalOpen, theme } = useUIStore();
+  const { libraryPanelOpen, propertiesPanelOpen, assembliesPanelOpen, projectDetailsPanelOpen, cutListModalOpen, settingsModalOpen, arrayModalOpen, theme, toggleArrayModal } = useUIStore();
 
   // Enable global keyboard shortcuts
   useKeyboardShortcuts();
@@ -112,6 +113,9 @@ export function MainLayout() {
 
       {/* Settings Modal */}
       {settingsModalOpen && <SettingsModal />}
+
+      {/* Array Modal */}
+      {arrayModalOpen && <ArrayModal onClose={toggleArrayModal} />}
 
       {/* Recovery Modal */}
       {!isCheckingRecovery && recoveryAvailable && (

@@ -9,6 +9,7 @@ export function ViewOptionsMenu() {
     gridVisible,
     rulersVisible,
     minorGridVisible,
+    viewCubeVisible,
     libraryPanelOpen,
     propertiesPanelOpen,
     controlsPanelOpen,
@@ -18,6 +19,7 @@ export function ViewOptionsMenu() {
     toggleGrid,
     toggleRulers,
     toggleMinorGrid,
+    toggleViewCube,
     toggleLibraryPanel,
     togglePropertiesPanel,
     toggleControlsPanel,
@@ -95,6 +97,16 @@ export function ViewOptionsMenu() {
               <span>Rulers</span>
               <span className="text-xs text-gray-500">
                 {rulersVisible && '✓'}
+              </span>
+            </button>
+
+            <button
+              onClick={toggleViewCube}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-sm hover:bg-gray-100 rounded transition-colors"
+            >
+              <span>View Cube</span>
+              <span className="text-xs text-gray-500">
+                {viewCubeVisible && '✓'}
               </span>
             </button>
           </div>

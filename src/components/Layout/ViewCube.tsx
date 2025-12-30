@@ -8,11 +8,16 @@ export function ViewCube() {
 
   // Get actions
   const { setView } = useProjectStore();
-  const { theme } = useUIStore();
+  const { theme, viewCubeVisible } = useUIStore();
   const currentView = camera.currentView;
 
+  // Don't render if hidden
+  if (!viewCubeVisible) {
+    return null;
+  }
+
   // Define isometric cube geometry (showing Top, Front, Right faces)
-  const cubeSize = 80;
+  const cubeSize = 76; // Reduced by 5% to prevent edge clipping
   const faceDepth = 40;
 
   // Define the three visible faces in isometric view
@@ -43,19 +48,12 @@ export function ViewCube() {
     textY: cubeSize / 2 + 20,
   };
 
-  // Define corner vertices for isometric view buttons
+  // Define corner vertices for isometric view buttons (all 4 corners of the TOP face)
   const corners = [
-    { x: cubeSize / 2, y: 10, view: 'iso-back-left' as ViewType },           // Top vertex
-    { x: cubeSize - 5, y: cubeSize / 2 - 10, view: 'iso-front-right' as ViewType }, // Right vertex
-    { x: 5, y: cubeSize / 2 - 10, view: 'iso-front-left' as ViewType },      // Left vertex
-  ];
-
-  // Define other views accessible via buttons below the cube
-  const otherViews: { label: string; view: ViewType }[] = [
-    { label: 'Back', view: 'back' },
-    { label: 'Left', view: 'left' },
-    { label: 'Bottom', view: 'bottom' },
-    { label: 'ISO-BR', view: 'iso-back-right' },
+    { x: cubeSize / 2, y: 10, view: 'iso-back-left' as ViewType },                 // Top corner of top face
+    { x: cubeSize - 5, y: cubeSize / 2 - 10, view: 'iso-back-right' as ViewType }, // Right corner of top face
+    { x: 5, y: cubeSize / 2 - 10, view: 'iso-front-left' as ViewType },           // Left corner of top face
+    { x: cubeSize / 2, y: cubeSize - 20, view: 'iso-front-right' as ViewType },   // Bottom corner of top face (front)
   ];
 
   const handleViewClick = (view: ViewType) => {
@@ -93,9 +91,9 @@ export function ViewCube() {
   };
 
   return (
-    <div className={`${colors.bg} rounded-lg shadow-lg border ${colors.border} p-3 flex flex-col items-center gap-1`}>
+    <div className={`${colors.bg} rounded-lg shadow-lg border ${colors.border} p-4 flex flex-col items-center gap-1`}>
       {/* Isometric Cube */}
-      <svg width={cubeSize} height={cubeSize + 30} className="cursor-pointer">
+      <svg width={cubeSize + 10} height={cubeSize + 35} viewBox={`-5 -5 ${cubeSize + 10} ${cubeSize + 35}`} className="cursor-pointer">
         {/* Top Face */}
         <polygon
           points={topFace.points}
@@ -178,26 +176,6 @@ export function ViewCube() {
       {/* Current View Label */}
       <div className={`text-xs font-semibold ${colors.text} px-2 py-0.5 rounded`}>
         {getViewDisplayName(currentView)}
-      </div>
-
-      {/* Additional View Buttons */}
-      <div className="flex gap-1 mt-0.5">
-        {otherViews.map((view) => (
-          <button
-            key={view.view}
-            onClick={() => handleViewClick(view.view)}
-            className={`
-              px-2 py-0.5 text-xs font-medium rounded transition-colors
-              ${
-                currentView === view.view
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-              }
-            `}
-          >
-            {view.label}
-          </button>
-        ))}
       </div>
     </div>
   );

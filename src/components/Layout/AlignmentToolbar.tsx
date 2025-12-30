@@ -1,4 +1,5 @@
 import { useProjectStore } from '@/stores/projectStore';
+import { useUIStore } from '@/stores/uiStore';
 import { alignObjects, distributeObjects, AlignmentType, DistributionType } from '@/lib/geometry/alignment';
 
 export function AlignmentToolbar() {
@@ -8,10 +9,11 @@ export function AlignmentToolbar() {
 
   // Get actions
   const { updateObject } = useProjectStore();
+  const { toggleArrayModal } = useUIStore();
 
   const selectedObjects = objects.filter((obj) => selectedObjectIds.includes(obj.id));
 
-  if (selectedObjects.length < 2) {
+  if (selectedObjects.length < 1) {
     return null;
   }
 
@@ -32,8 +34,22 @@ export function AlignmentToolbar() {
 
   return (
     <div className="flex items-center gap-2 border-l border-gray-300 pl-4">
-      {/* Alignment Tools */}
-      <div className="flex items-center gap-1">
+      {/* Array Tool (only show for single selection) */}
+      {selectedObjects.length === 1 && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleArrayModal}
+            className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors font-medium"
+            title="Create Array"
+          >
+            📋 Array
+          </button>
+        </div>
+      )}
+
+      {/* Alignment Tools (only show for 2+ objects) */}
+      {selectedObjects.length >= 2 && (
+        <div className="flex items-center gap-1">
         <span className="text-xs text-gray-600 mr-2">Align:</span>
         <button
           onClick={() => handleAlign('left')}
@@ -77,7 +93,8 @@ export function AlignmentToolbar() {
         >
           ⫵
         </button>
-      </div>
+        </div>
+      )}
 
       {/* Distribution Tools (only show for 3+ objects) */}
       {selectedObjects.length >= 3 && (

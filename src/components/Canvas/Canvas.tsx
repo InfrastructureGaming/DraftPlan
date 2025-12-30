@@ -1252,7 +1252,7 @@ export function Canvas() {
       )}
 
       {/* View Cube */}
-      <div className="absolute top-4 right-[228px] z-10">
+      <div className="absolute top-4 right-[185px] z-10">
         <ViewCube />
       </div>
 
