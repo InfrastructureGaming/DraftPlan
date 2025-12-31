@@ -83,6 +83,17 @@ Claude has full permissions to access and modify this document freely as needed.
 ## Recently Completed ✅
 
 ### Session: 2024-12-30
+- ✅ **Dimension Line Annotation Tool** - Precise measurement annotations in 3D space
+  - Two-click creation workflow: click start point, then end point
+  - Automatic distance calculation displayed in inches with decimal precision
+  - SVG-based rendering with arrows and endpoint markers
+  - "Dimension" toggle button (📏) in Canvas Controls
+  - Theme-aware colors (white for dark/blueprint, black for light)
+  - Text labels with background for readability
+  - Escape key to cancel dimension line mode
+  - Full integration with project save/load and undo/redo
+  - Works in all orthographic and isometric views
+  - Future: Edit endpoints, delete lines, custom labels
 - ✅ **Custom Lumber Library** - Add, edit, and manage custom lumber items
   - "+ Custom" button in Library panel for adding custom items
   - AddCustomLumberModal with form fields for Name, Dimensions, Material, Category
@@ -150,4 +161,4 @@ Claude has full permissions to access and modify this document freely as needed.
 
 ---
 
-*Last Updated: 2024-12-30 - Custom Lumber Library Complete*
+*Last Updated: 2024-12-31 - Dimension Line Annotation Tool Complete*
