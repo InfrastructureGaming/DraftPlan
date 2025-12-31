@@ -39,7 +39,7 @@ export function CanvasControls({
   onPanEnd,
   gridSize,
 }: CanvasControlsProps) {
-  const { majorGridSize, setMajorGridSize, snapIncrement, setSnapIncrement, theme } = useUIStore();
+  const { majorGridSize, setMajorGridSize, snapIncrement, setSnapIncrement, theme, dimensionLineMode, toggleDimensionLineMode } = useUIStore();
   const [isPanActive, setIsPanActive] = useState(false);
 
   // Theme-based colors
@@ -123,6 +123,22 @@ export function CanvasControls({
           Center
         </button>
       </div>
+
+      {/* Divider */}
+      <div className={`border-t ${colors.border} my-1`} />
+
+      {/* Dimension Line Tool */}
+      <button
+        onClick={toggleDimensionLineMode}
+        className={`w-full h-8 px-2 flex items-center justify-center border rounded transition-colors text-xs font-medium ${
+          dimensionLineMode
+            ? 'bg-blue-500 border-blue-600 text-white'
+            : `${colors.buttonBorder} ${colors.hover} ${colors.text}`
+        }`}
+        title="Dimension Line Tool (Click two points to create)"
+      >
+        📏 Dimension
+      </button>
 
       {/* Divider */}
       <div className={`border-t ${colors.border} my-1`} />

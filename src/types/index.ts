@@ -52,6 +52,18 @@ export interface Assembly {
   isExpanded: boolean;            // UI state for tree view
 }
 
+export interface DimensionLine {
+  id: string;
+  name: string;
+  startPoint: Vector3D;           // First endpoint in 3D world coordinates
+  endPoint: Vector3D;             // Second endpoint in 3D world coordinates
+  textOffset: number;             // Distance from line to text label (perpendicular offset)
+  color: string;                  // Line and text color
+  visible: boolean;               // Visibility toggle
+  locked: boolean;                // Prevents editing when true
+  notes: string;                  // User notes
+}
+
 export interface CameraState {
   currentView: ViewType;
   zoom: number;
@@ -77,6 +89,7 @@ export interface ProjectFile {
   projectInfo: ProjectInfo;
   objects: DraftObject[];
   assemblies: Assembly[];
+  dimensionLines: DimensionLine[];
   camera: CameraState;
   settings: ProjectSettings;
 }

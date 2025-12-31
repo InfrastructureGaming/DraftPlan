@@ -5,12 +5,13 @@ import { exportCurrentViewAsPNG, exportMultiViewPDF } from '@/lib/export/canvasE
 import { useUIStore } from '@/stores/uiStore';
 import { createOrthographicCamera, setupCameraForView } from '@/lib/three/views';
 import { screenToWorld, snapVectorToGrid, screenDeltaToWorldDelta } from '@/lib/geometry/coordinates';
-import { ViewType, DraftObject, LumberLibraryItem, Assembly } from '@/types';
+import { ViewType, DraftObject, LumberLibraryItem, Assembly, Vector3D } from '@/types';
 import { CanvasControls } from './CanvasControls';
 import { ViewCube } from '../Layout/ViewCube';
 import { Rulers } from './Rulers';
 import { DimensionOverlay } from './DimensionOverlay';
 import { TransformGizmo } from './TransformGizmo';
+import { DimensionLines } from './DimensionLines';
 import { computeWorldTransform, isNodeVisible, getEffectiveColor, worldToLocalPosition } from '@/lib/hierarchy/transforms';
 
 export function Canvas() {
@@ -28,8 +29,8 @@ export function Canvas() {
   const selectedObjectIds = useProjectStore((state) => state.tabs[state.activeTabIndex]?.selectedObjectIds || []);
 
   // Get actions
-  const { addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView } = useProjectStore();
-  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests, gizmoVisible } = useUIStore();
+  const { addObject, updateObject, updateObjectPosition, removeObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView, addDimensionLine } = useProjectStore();
+  const { gridVisible, theme, controlsPanelOpen, libraryPanelOpen, propertiesPanelOpen, snapIncrement, exportPNGRequested, exportPDFRequested, clearExportRequests, gizmoVisible, dimensionLineMode, toggleDimensionLineMode } = useUIStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -45,6 +46,7 @@ export function Canvas() {
   const [previewSelectedIds, setPreviewSelectedIds] = useState<string[]>([]);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
   const [currentGridSpacing, setCurrentGridSpacing] = useState(1);
+  const [dimensionLineStartPoint, setDimensionLineStartPoint] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastGridUpdateRef = useRef({ zoom: 1, viewType: 'front' as ViewType });
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const panStartPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -231,6 +233,16 @@ export function Canvas() {
       const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+
+      // Escape key: exit dimension line mode and clear start point
+      if (e.key === 'Escape' && !isTyping) {
+        if (dimensionLineMode) {
+          e.preventDefault();
+          setDimensionLineStartPoint(null);
+          toggleDimensionLineMode();
+          return;
+        }
+      }
 
       // Undo (Cmd/Ctrl + Z, but not Shift+Z)
       if (isCmdOrCtrl && e.key === 'z' && !e.shiftKey && !isTyping) {
@@ -421,7 +433,7 @@ export function Canvas() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedObjectIds, objects, removeObject, addObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView, updateObject, camera.currentView]);
+  }, [selectedObjectIds, objects, removeObject, addObject, selectObject, clearSelection, undo, redo, pushToHistory, setZoom, setPanOffset, setView, updateObject, camera.currentView, dimensionLineMode, toggleDimensionLineMode]);
 
   // Render objects from store
   useEffect(() => {
@@ -591,6 +603,49 @@ export function Canvas() {
     const canvas = canvasRef.current;
     const camera3D = cameraRef.current;
     if (!canvas || !camera3D) return;
+
+    // Handle dimension line creation mode
+    if (dimensionLineMode && e.button === 0) {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+
+      // Convert screen coordinates to world coordinates
+      const worldPos = screenToWorld(
+        screenX,
+        screenY,
+        camera3D,
+        camera.currentView,
+        rect.width,
+        rect.height
+      );
+
+      if (!dimensionLineStartPoint) {
+        // First click: store start point
+        setDimensionLineStartPoint(worldPos);
+      } else {
+        // Second click: create dimension line
+        const newDimensionLine = {
+          id: `dim-${Date.now()}-${Math.random()}`,
+          name: 'Dimension',
+          startPoint: dimensionLineStartPoint,
+          endPoint: worldPos,
+          textOffset: 20, // Default offset in screen pixels
+          color: theme === 'dark' ? '#ffffff' : theme === 'blueprint' ? '#ffffff' : '#000000',
+          visible: true,
+          locked: false,
+          notes: '',
+        };
+
+        addDimensionLine(newDimensionLine);
+        setDimensionLineStartPoint(null); // Reset for next dimension line
+
+        // Optionally exit dimension line mode after creating one line
+        // toggleDimensionLineMode(); // Uncomment to auto-exit after creating one line
+      }
+      return; // Don't process other mouse events when in dimension line mode
+    }
 
     // Middle mouse button or Space+Left mouse or pan button for panning
     if (e.button === 1 || (e.button === 0 && e.shiftKey) || (e.button === 0 && isPanningFromButton)) {
@@ -1249,6 +1304,16 @@ export function Canvas() {
           currentView={camera.currentView}
           canvasWidth={canvasDimensions.width}
           canvasHeight={canvasDimensions.height}
+        />
+      )}
+
+      {/* Dimension Lines */}
+      {canvasDimensions.width > 0 && cameraRef.current && (
+        <DimensionLines
+          canvasWidth={canvasDimensions.width}
+          canvasHeight={canvasDimensions.height}
+          currentView={camera.currentView}
+          camera={cameraRef.current}
         />
       )}
 

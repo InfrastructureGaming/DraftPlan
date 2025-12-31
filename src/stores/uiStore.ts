@@ -13,6 +13,7 @@ interface UIState extends ProjectSettings {
   arrayModalOpen: boolean;
   viewCubeVisible: boolean;
   gizmoVisible: boolean;
+  dimensionLineMode: boolean; // Whether we're in dimension line creation mode
 
   // Panel collapse states
   projectDetailsPanelCollapsed: boolean;
@@ -44,6 +45,7 @@ interface UIState extends ProjectSettings {
   toggleArrayModal: () => void;
   toggleViewCube: () => void;
   toggleGizmo: () => void;
+  toggleDimensionLineMode: () => void;
   toggleProjectDetailsPanelCollapse: () => void;
   togglePropertiesPanelCollapse: () => void;
   toggleAssembliesPanelCollapse: () => void;
@@ -71,6 +73,7 @@ export const useUIStore = create<UIState>((set) => ({
   arrayModalOpen: false, // Default to closed
   viewCubeVisible: true, // Default to visible
   gizmoVisible: true, // Default to visible
+  dimensionLineMode: false, // Default to off
   projectDetailsPanelCollapsed: false, // Default to expanded
   propertiesPanelCollapsed: false, // Default to expanded
   assembliesPanelCollapsed: false, // Default to expanded
@@ -105,6 +108,8 @@ export const useUIStore = create<UIState>((set) => ({
     set((state) => ({ viewCubeVisible: !state.viewCubeVisible })),
   toggleGizmo: () =>
     set((state) => ({ gizmoVisible: !state.gizmoVisible })),
+  toggleDimensionLineMode: () =>
+    set((state) => ({ dimensionLineMode: !state.dimensionLineMode })),
   toggleProjectDetailsPanelCollapse: () =>
     set((state) => ({ projectDetailsPanelCollapsed: !state.projectDetailsPanelCollapsed })),
   togglePropertiesPanelCollapse: () =>

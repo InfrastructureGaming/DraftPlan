@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { DraftObject, Assembly, CameraState, ViewType, ProjectInfo, ProjectFile, Vector3D } from '@/types';
+import { DraftObject, Assembly, DimensionLine, CameraState, ViewType, ProjectInfo, ProjectFile, Vector3D } from '@/types';
 import {
   computeWorldTransform,
   worldToLocalPosition,
@@ -16,6 +16,7 @@ import { addRecentProject } from '@/lib/storage/recentProjects';
 interface HistorySnapshot {
   objects: DraftObject[];
   assemblies: Assembly[];
+  dimensionLines: DimensionLine[];
 }
 
 // Individual project tab state
@@ -26,6 +27,7 @@ interface ProjectTab {
   hasUnsavedChanges: boolean;
   objects: DraftObject[];
   assemblies: Assembly[];
+  dimensionLines: DimensionLine[];
   camera: CameraState;
   selectedObjectIds: string[];
   undoStack: HistorySnapshot[];
@@ -43,6 +45,7 @@ interface ProjectState {
   get hasUnsavedChanges(): boolean;
   get objects(): DraftObject[];
   get assemblies(): Assembly[];
+  get dimensionLines(): DimensionLine[];
   get camera(): CameraState;
   get selectedObjectIds(): string[];
 
@@ -80,6 +83,11 @@ interface ProjectState {
   updateObjectPosition: (id: string, worldPosition: Vector3D, skipHistory?: boolean) => void;
   updateObjectRotation: (id: string, rotation: Vector3D) => void;
 
+  // Dimension line management
+  addDimensionLine: (dimensionLine: DimensionLine) => void;
+  updateDimensionLine: (id: string, updates: Partial<DimensionLine>) => void;
+  removeDimensionLine: (id: string) => void;
+
   // Undo/Redo
   undo: () => void;
   redo: () => void;
@@ -107,6 +115,7 @@ const createEmptyTab = (name?: string, id?: string): ProjectTab => ({
   hasUnsavedChanges: false,
   objects: [],
   assemblies: [],
+  dimensionLines: [],
   camera: {
     currentView: 'front',
     zoom: 1.0,
@@ -117,10 +126,11 @@ const createEmptyTab = (name?: string, id?: string): ProjectTab => ({
   redoStack: [],
 });
 
-// Helper function to create a deep copy of objects and assemblies
+// Helper function to create a deep copy of objects, assemblies, and dimension lines
 const createSnapshot = (tab: ProjectTab): HistorySnapshot => ({
   objects: JSON.parse(JSON.stringify(tab.objects)),
   assemblies: JSON.parse(JSON.stringify(tab.assemblies)),
+  dimensionLines: JSON.parse(JSON.stringify(tab.dimensionLines)),
 });
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -149,6 +159,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const state = get();
     return state.tabs[state.activeTabIndex]?.assemblies || [];
   },
+  get dimensionLines() {
+    const state = get();
+    return state.tabs[state.activeTabIndex]?.dimensionLines || [];
+  },
   get camera() {
     const state = get();
     return state.tabs[state.activeTabIndex]?.camera || createEmptyTab().camera;
@@ -169,6 +183,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             hasUnsavedChanges: false,
             objects: project.objects,
             assemblies: project.assemblies,
+            dimensionLines: project.dimensionLines || [], // Support older files without dimensionLines
             camera: project.camera,
             selectedObjectIds: [],
             undoStack: [],
@@ -411,6 +426,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           projectInfo: project.projectInfo,
           objects: project.objects,
           assemblies: project.assemblies,
+          dimensionLines: project.dimensionLines || [], // Support older files without dimensionLines
           camera: project.camera,
           currentFilePath: filePath || null,
           hasUnsavedChanges: false,
@@ -427,13 +443,24 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   getProjectFile: () => {
     const state = get();
     const activeTab = state.tabs[state.activeTabIndex];
-    if (!activeTab) return { projectInfo: createEmptyTab().projectInfo, objects: [], assemblies: [], camera: createEmptyTab().camera };
+    if (!activeTab) return {
+      version: '1.0',
+      projectInfo: createEmptyTab().projectInfo,
+      objects: [],
+      assemblies: [],
+      dimensionLines: [],
+      camera: createEmptyTab().camera,
+      settings: { gridVisible: true, rulersVisible: true, theme: 'light' }
+    };
 
     return {
+      version: '1.0',
       projectInfo: activeTab.projectInfo,
       objects: activeTab.objects,
       assemblies: activeTab.assemblies,
+      dimensionLines: activeTab.dimensionLines,
       camera: activeTab.camera,
+      settings: { gridVisible: true, rulersVisible: true, theme: 'light' },
     };
   },
 
@@ -849,6 +876,65 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       return { tabs };
     }),
 
+  // Dimension line management
+  addDimensionLine: (dimensionLine) =>
+    set((state) => {
+      const tabs = [...state.tabs];
+      const activeTab = tabs[state.activeTabIndex];
+      if (!activeTab) return state;
+
+      const snapshot = createSnapshot(activeTab);
+      tabs[state.activeTabIndex] = {
+        ...activeTab,
+        dimensionLines: [...activeTab.dimensionLines, dimensionLine],
+        hasUnsavedChanges: true,
+        undoStack: [...activeTab.undoStack, snapshot],
+        redoStack: [],
+      };
+
+      return { tabs };
+    }),
+
+  updateDimensionLine: (id, updates) =>
+    set((state) => {
+      const tabs = [...state.tabs];
+      const activeTab = tabs[state.activeTabIndex];
+      if (!activeTab) return state;
+
+      const snapshot = createSnapshot(activeTab);
+      const updatedDimensionLines = activeTab.dimensionLines.map((line) =>
+        line.id === id ? { ...line, ...updates } : line
+      );
+
+      tabs[state.activeTabIndex] = {
+        ...activeTab,
+        dimensionLines: updatedDimensionLines,
+        hasUnsavedChanges: true,
+        undoStack: [...activeTab.undoStack, snapshot],
+        redoStack: [],
+      };
+
+      return { tabs };
+    }),
+
+  removeDimensionLine: (id) =>
+    set((state) => {
+      const tabs = [...state.tabs];
+      const activeTab = tabs[state.activeTabIndex];
+      if (!activeTab) return state;
+
+      const snapshot = createSnapshot(activeTab);
+      tabs[state.activeTabIndex] = {
+        ...activeTab,
+        dimensionLines: activeTab.dimensionLines.filter((line) => line.id !== id),
+        hasUnsavedChanges: true,
+        undoStack: [...activeTab.undoStack, snapshot],
+        redoStack: [],
+      };
+
+      return { tabs };
+    }),
+
   undo: () =>
     set((state) => {
       const tabs = [...state.tabs];
@@ -862,6 +948,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ...activeTab,
         objects: previousState.objects,
         assemblies: previousState.assemblies,
+        dimensionLines: previousState.dimensionLines,
         undoStack: activeTab.undoStack.slice(0, -1),
         redoStack: [...activeTab.redoStack, currentState],
         hasUnsavedChanges: true,
@@ -883,6 +970,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ...activeTab,
         objects: nextState.objects,
         assemblies: nextState.assemblies,
+        dimensionLines: nextState.dimensionLines,
         undoStack: [...activeTab.undoStack, currentState],
         redoStack: activeTab.redoStack.slice(0, -1),
         hasUnsavedChanges: true,
