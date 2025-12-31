@@ -4,6 +4,8 @@ This is a comprehensive to-do list encompassing this entire project. It is desig
 
 This document should be kept updated during programming sessions, and referenced regularly throughout development.
 
+PLEASE REVIEW THIS DOCUMENT BEFORE BEGINNING WORK ON ANY NEW FEATURE!!
+
 Claude has full permissions to access and modify this document freely as needed.
 
 ---
@@ -11,12 +13,14 @@ Claude has full permissions to access and modify this document freely as needed.
 ## Current Sprint - In Progress
 
 ### 1. 3D Transformation Gizmo Widget
+
 **Goal:** Add visual axis handles for intuitive object manipulation in 3D space
 
 **Status:** ✅ Complete (Phase 1)
 **Priority:** High (Critical UX improvement for 3D manipulation)
 
 **Phase 1 - Move Mode:**
+
 - [x] Create TransformGizmo component with SVG rendering
 - [x] Position gizmo at selected object's world position
 - [x] Draw three axis arrows (X=Red, Y=Green, Z=Blue)
@@ -30,19 +34,23 @@ Claude has full permissions to access and modify this document freely as needed.
 - [ ] Add planar movement squares (XY, XZ, YZ planes) - Future enhancement
 
 **Phase 2 - Settings (Optional enhancement):**
+
 - [ ] Add "Gizmo Scale" slider in Settings panel
 
 **Phase 3 - Rotate Mode (Future):**
+
 - [ ] Add rotation rings for each axis
 - [ ] Implement rotation angle calculation
 - [ ] Add visual feedback during rotation
 
 **Phase 4 - Scale Mode (Future):**
+
 - [ ] Add scale handles at axis endpoints
 - [ ] Implement uniform vs non-uniform scaling
 - [ ] Add visual feedback during scaling
 
 **Design Decisions:**
+
 - Gizmo appears automatically when object is selected ✅
 - Real-time numerical feedback during drag (+/-X.XX") ✅
 - Standard industry colors (X=Red, Y=Green, Z=Blue) ✅
@@ -50,9 +58,36 @@ Claude has full permissions to access and modify this document freely as needed.
 - SVG-based rendering for consistency with existing architecture
 
 **Notes:**
+
 - Start with Move mode only - Rotate and Scale are future enhancements
 - Address current issue: 2D mouse movement → 3D transformation is unintuitive
 - Will likely hit auto-compact during implementation (todo_master.md survives!)
+
+---
+
+### 2. Dimension Line Annotation Tool Testing
+
+**Goal:** Thoroughly test dimension line functionality across all views and scenarios
+
+**Status:** 🔜 Pending
+**Priority:** Medium (Quality assurance for newly implemented feature)
+
+**Testing Tasks:**
+- [ ] Test dimension line creation in all orthographic views (front, back, left, right, top, bottom)
+- [ ] Test dimension line creation in all isometric views
+- [ ] Verify distance calculations are accurate
+- [ ] Test with different zoom levels
+- [ ] Test with pan operations
+- [ ] Verify dimension lines save/load correctly
+- [ ] Test undo/redo with dimension lines
+- [ ] Test dimension line visibility in different themes (light, dark, blueprint)
+- [ ] Test Escape key cancellation
+- [ ] Test creating multiple dimension lines in sequence
+- [ ] Edge cases: very short lines, very long lines, diagonal lines
+
+**Notes:**
+- Will test after completing remaining transformation gizmo work
+- Should verify dimension lines don't interfere with object selection or gizmo
 
 ---
 
@@ -61,18 +96,22 @@ Claude has full permissions to access and modify this document freely as needed.
 ## Backlog - Future Features
 
 ### UI/UX Improvements
+
 - [ ] Keyboard shortcut reference dialog (Help menu)
-- [ ] Annotation tools (text labels, arrows, dimension lines)
-- [ ] Manual dimension lines with arrows
+- [ ] Text annotation labels (standalone text labels)
+- [ ] Arrow annotation tool (pointing arrows for callouts)
+- [ ] Dimension line editing (move endpoints, adjust text offset, delete)
 - [ ] Improve touch/trackpad gesture support
 
 ### Advanced Features
+
 - [ ] Joinery indicators (visual markers for joints)
 - [ ] Metric unit support
 - [ ] Template library (common projects)
 - [ ] Hardware library (screws, hinges, brackets)
 
 ### Performance & Polish
+
 - [ ] Object culling for large projects (>500 objects)
 - [ ] Implement proper polygon clipping for rotated objects
 - [ ] Add loading states for heavy operations
@@ -83,6 +122,7 @@ Claude has full permissions to access and modify this document freely as needed.
 ## Recently Completed ✅
 
 ### Session: 2024-12-30
+
 - ✅ **Dimension Line Annotation Tool** - Precise measurement annotations in 3D space
   - Two-click creation workflow: click start point, then end point
   - Automatic distance calculation displayed in inches with decimal precision
@@ -120,6 +160,7 @@ Claude has full permissions to access and modify this document freely as needed.
 - ✅ Fixed UI spacing issues (no overlapping panels)
 
 ### Previous Sessions
+
 - ✅ Multi-project tabs with automatic management
 - ✅ Mouse wheel zoom with cursor-centered zooming
 - ✅ Recent Projects list in File menu
@@ -135,25 +176,28 @@ Claude has full permissions to access and modify this document freely as needed.
 
 ## Known Issues / Bugs
 
-*No critical bugs currently tracked*
+_No critical bugs currently tracked_
 
 ---
 
 ## Notes & Decisions
 
 **Architecture Decisions:**
+
 - Using Zustand for state management with selector pattern for reactivity
 - Electron for cross-platform desktop app
 - Three.js for 3D math (orthographic views, not rendering)
 - Y-up coordinate system (matches Unreal Engine)
 
 **Design Principles:**
+
 - Focus on woodworking/CAD use case
 - Keep UI clean and uncluttered
 - Prefer keyboard shortcuts for power users
 - Theme support (Light, Dark, Blueprint)
 
 **Development Process:**
+
 - Commit after each major feature completion
 - Test thoroughly before moving to next feature
 - Use this todo_master.md for task tracking across sessions
@@ -161,4 +205,4 @@ Claude has full permissions to access and modify this document freely as needed.
 
 ---
 
-*Last Updated: 2024-12-31 - Dimension Line Annotation Tool Complete*
+_Last Updated: 2024-12-31 - Dimension Line Annotation Tool Complete_
